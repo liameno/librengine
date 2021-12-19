@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{QUERY} - Librengine</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="../third_party/fontawesome/css/all.css" rel="stylesheet">
+
+    <link rel="stylesheet" media="all" href="../css/page.css">
+    <link rel="stylesheet" media="all" href="../css/header.css">
+    <link rel="stylesheet" media="all" href="../css/search.css">
+</head>
+<body>
+<div class="background"></div>
+<div class="container">
+    <div class="top_container">
+        <div class="top_container_content">
+            <div class="top_left_container">
+                <form class="search_widget" action="search" method="GET">
+                    <input class="input" name="q" type="search" value="{QUERY}" placeholder="query" required>
+                    <button class="button" type="submit">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="header_content">
+                <nav>
+                    <ul>
+                        {HEADER_CONTENT}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+    <div class="center_container">
+        {CENTER_RESULTS}
+        <!--<div class="center_result">
+            <div class="content">
+            <a class="title" href=""></a>
+            <div class="url"></div>
+            <div class="description"></div>
+            </div>
+            <div class="rating_container">
+                <div class="rating">
+                    <div class="counter">/100</div>
+                    <a class="plus rating_button" href="#"><i class="fa fa-arrow-up"></i></a>
+                    <a class="minus rating_button" href="#"><i class="fa fa-arrow-down"></i></a>
+                </div>
+            </div>
+        </div>-->
+        <div class="buttons">
+            <a class="prev page_button" href="search?q={QUERY}&s={PREV_PAGE}"><i class="fa fa-arrow-left"></i></a>
+            <a class="next page_button" href="search?q={QUERY}&s={NEXT_PAGE}"><i class="fa fa-arrow-right"></i></a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

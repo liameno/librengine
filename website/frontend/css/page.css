@@ -1,0 +1,75 @@
+:root {
+    --light: #f0eff3;
+    --dark: #1f1f1f;
+    --dark_blue: #1f2029;
+    --dark_light2: #525252;
+    --dark_light: #424242;
+    --white: #efe6dd;
+    --white_dark: #d5d5d5;
+    --gray: #c4c4c4;
+    --gray_dark: #ffffff1f;
+    --gray_light_dark: #ffffff5f;
+    --red: #bb4430;
+    --red2: #da2c4d;
+    --red_light: #d0644f;
+    --blue: #2dc3fd;
+    --blue_dark: #2597c4;
+    --black: #000000;
+    --black_transparent: rgba(0, 0, 0, 0.9);
+    --yellow: #f8ab37;
+}
+
+::selection {
+    color: var(--yellow);
+    background: var(--red);
+}
+
+@font-face {
+    font-family: 'JetBrainsMono';
+    src: url('../fonts/JetBrainsMono/fonts/ttf/JetBrainsMonoNL-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.background {
+    background: var(--dark);
+    background: url("../assets/forest_cs.jpg") no-repeat center center fixed;
+    background-size: cover;
+    transform: scale(1.1);
+    filter: blur(5px);
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+html, body {
+    font-family: 'JetBrainsMono', monospace;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--gray);
+}
+
+.container {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-flow: column wrap;
+}
+
+html * {
+    font-size: 16px;
+    font-style: normal;
+    font-weight: normal;
+}
+
+.main {
+    width: 100%;
+    height: 100%;
+}

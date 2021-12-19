@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/third_party/abseil-cpp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/backend/RSA-Library" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/backend/third_party/Crypto-Example" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/backend/third_party/RSA-Library" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/backend/third_party/crypt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/frontend/third_party/aes-lib-js" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/frontend/third_party/jsencrypt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/frontend/third_party/safe-exchange" vcs="Git" />
+  </component>
+</project>
