@@ -36,14 +36,14 @@ int main(int argc, char **argv) {
     config.user_agent                       = "librengine";
     config.opensearch_url                   = "http://localhost:9200";      //without '/'
     config.update_time_site_info_s_after    = 864000;   //10 days
-    config.limit_page_symbols               = 50000;
+    config.limit_page_symbols               = 50000000; //50 mb
     config.limit_robots_txt_symbols         = 3000;
     config.is_http_to_https                 = true;     //https://en.wikipedia.org/wiki/HTTPS
     config.is_check_robots_txt              = true;     //https://en.wikipedia.org/wiki/Robots_exclusion_standard
 
-    std::cout << std::string(25, '=') << "CFG" << std::string(25, '=') << std::endl
-    << config.to_str() << std::endl
-    << std::string(25, '=') << "===" << std::string(25, '=') << std::endl;
+    std::cout   << std::string(25, '=')     << "CFG"    << std::string(25, '=') << std::endl
+                << config.to_str()          << std::endl
+                << std::string(25, '=')     << "==="    << std::string(25, '=') << std::endl;
 
     easy_start(config);
 

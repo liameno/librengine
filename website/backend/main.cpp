@@ -1,19 +1,12 @@
 #include "third_party/httplib.h"
 
 #include <optional>
-#include <librengine/crawler/config.h>
-#include <librengine/crawler/worker.h>
 #include <librengine/opensearch.h>
 #include <librengine/third_party/json/json.hpp>
 #include <librengine/str.h>
 #include <librengine/str_impl.h>
-#include <utility>
 #include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
-#include <openssl/err.h>
+#include <cstring>
 
 using namespace librengine;
 
@@ -46,7 +39,7 @@ namespace pages {
 
         nlohmann::json json;
 
-        json["query"]["query_string"]["fields"] = {"url", "title", "content"};
+        json["query"]["query_string"]["fields"] = {"url", "title", "desc"};
         json["query"]["query_string"]["query"] = q;
         json["size"] = 10;
         json["from"] = s;
@@ -170,12 +163,8 @@ namespace pages {
 }
 
 int main(int argc, char **argv) {
-    if (argc <= 1) {
-        std::cout << "Usage: bin [port]\nExample: ./backend 8080" << std::endl;
-        return 1;
-    }
-
-    int port = 0;
+    if (argc <= 1) { std::cout << "Usage: bin [port]\nExample: ./backend 8080" << std::endl; return 1; }
+    int port;
 
     try {
         port = std::stoi(argv[1]);
@@ -184,10 +173,7 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    if (port == 0) {
-        std::cout << "Port == 0" << std::endl;
-        return 3;
-    }
+    if (port == 0) {  std::cout << "Port == 0" << std::endl; return 3; }
 
     using namespace httplib;
     auto client = opensearch::client("http://localhost:9200");

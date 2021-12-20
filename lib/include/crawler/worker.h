@@ -10,6 +10,16 @@
 
 namespace librengine::crawler {
     class worker {
+    public:
+        enum class result {
+            added,
+            disallowed_robots,
+            work_false,
+            already_added,
+            pages_limit,
+            null_or_limit,
+            error,
+        };
     private:
         config current_config;
         opensearch::client opensearch_client;
@@ -36,10 +46,11 @@ namespace librengine::crawler {
         bool is_allowed_in_robots(const std::string &body, const std::string &url) const;
         std::optional<std::string> get_robots_txt(const http::url &url);
 
-        static std::string compute_desc(lxb_html_document *document, lxb_dom_node *body);
+        static std::string get_desc(lxb_html_document *document);
+        static std::string compute_desc(const std::string &tag_name, lxb_html_document *document);
     public:
         worker(config config, opensearch::client opensearch_client);
-        void main_thread(const std::string &site_url, int &deep, const std::optional<std::string> &owner_host = std::nullopt);
+        result main_thread(const std::string &site_url, int &deep, const std::optional<std::string> &owner_host = std::nullopt);
     };
 }
 

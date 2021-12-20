@@ -9,6 +9,7 @@ Private Web Search engine
 	-  Node Info
 
 ## TODO
+-  Robots in headers && html, crawl-delay
 -  Encryption (public key)
 -  Site Rating
 -  CLI Search

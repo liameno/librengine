@@ -97,8 +97,6 @@ namespace librengine::http {
     }
 
     void url::parse() {
-        compute_text();
-
         //https://curl.se/libcurl/c/parseurl.html
         char *path;
         curl_url_set(current_curl_url, CURLUPART_URL, text.c_str(), 0/*CURLU_DEFAULT_SCHEME*/);
@@ -140,9 +138,7 @@ namespace librengine::http {
         if (!c) {
             this->text = path;
 
-            if (str::get_last_char(this->text) == '#') {
-                str::remove_last_char(this->text);
-            }
+            if (str::get_last_char(this->text) == '#') str::remove_last_char(this->text);
         }
 
         curl_free(path);
