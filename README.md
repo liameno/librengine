@@ -11,30 +11,24 @@ Private Web Search engine
 ## TODO
 -  Robots in headers && html, crawl-delay
 -  Encryption (public key)
--  Site Rating
+-  ~~Site Rating~~
 -  CLI Search
 -  API
 -  Export DB
 -  Images Crawler
+-  Admin Panel
 
 ## Dependencies
 Arch: `yay -S curl lexbor opensearch`
 ## Build
 ```shell
 git clone https://github.com/liameno/librengine
-cd ~/librengine/lib
-mkdir build && cd build && cmake .. && sudo make install
-
-cd ~/librengine/crawler
-mkdir build && cd build && cmake .. && make
-
-cd ~/librengine/website/backend
-mkdir build && cd build && cmake .. && make
+cd librengine
+sh build_all.sh
 ```
 ## Run
 ```shell
 opensearch
-cd ~/librengine
 sh set_opensearch.sh
 ```
 #### Crawler

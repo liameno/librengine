@@ -47,6 +47,9 @@ curl -XPUT "$ES_URL/website" -d'{
       "host": {
         "type": "keyword"
       },
+      "rating": {
+        "type": "byte"
+      },
       "date": {
         "type": "date"
       }

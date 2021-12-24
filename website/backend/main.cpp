@@ -7,14 +7,17 @@
 #include <librengine/str_impl.h>
 #include <iostream>
 #include <cstring>
+#include <thread>
 
 using namespace librengine;
 
 namespace pages {
     struct search_result {
+        std::string id;
         std::string title;
         std::string url;
         std::string desc;
+        size_t rating{0};
     };
 
     void set_variables(std::string &page_src) {
@@ -33,6 +36,37 @@ namespace pages {
 
         return buffer;
     }
+    static void update(const std::string &id, const std::string &field, const size_t &value, opensearch::client &client) {
+        const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
+        const auto type = opensearch::client::request_type::POST;
+
+        nlohmann::json json;
+        json["doc"][field] = value;
+
+        const auto response = client.custom_request(path, type, json.dump());
+    }
+    static void update(const std::string &id, const std::string &field, const std::string &value, opensearch::client &client) {
+        const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
+        const auto type = opensearch::client::request_type::POST;
+
+        nlohmann::json json;
+        json["doc"][field] = value;
+
+        const auto response = client.custom_request(path, type, json.dump());
+    }
+    static size_t get_number_field_value(const std::string &id, const std::string &field, opensearch::client &client) {
+        const auto path = opensearch::client::path_options("website/_doc/" + id);
+        const auto type = opensearch::client::request_type::GET;
+
+        const auto response = client.custom_request(path, type);
+        nlohmann::json result_json = nlohmann::json::parse(*response);
+        const auto rating = result_json["_source"][field];
+
+        if (rating.is_null()) return 0;
+        if (rating > 0) return (size_t)rating;
+
+        return 0;
+    }
     static std::optional<std::vector<search_result>> search(const std::string &q, const size_t &s, opensearch::client &client) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
@@ -45,7 +79,6 @@ namespace pages {
         json["from"] = s;
 
         const auto response = client.custom_request(path, type, json.dump());
-
         nlohmann::json result_json = nlohmann::json::parse(*response);
         const auto value = result_json["hits"]["total"]["value"];
 
@@ -62,9 +95,11 @@ namespace pages {
             search_result result;
 
             try {
+                result.id = result_json["hits"]["hits"][i]["_id"];
                 result.title = result_json["hits"]["hits"][i]["_source"]["title"];
                 result.url = result_json["hits"]["hits"][i]["_source"]["url"];
                 result.desc = result_json["hits"]["hits"][i]["_source"]["desc"];
+                result.rating = result_json["hits"]["hits"][i]["_source"]["rating"];
             } catch (const nlohmann::json::exception &e) {
                 continue;
             }
@@ -85,7 +120,6 @@ namespace pages {
         json["size"] = 0;
 
         const auto response = client.custom_request(path, type, json.dump());
-
         nlohmann::json result_json = nlohmann::json::parse(*response);
         const auto value = result_json["aggregations"]["host_uniq"]["sum_other_doc_count"];
 
@@ -117,8 +151,8 @@ namespace pages {
                                                      "<div class=\"rating_container\">"
                                                      "<div class=\"rating\">"
                                                      "<div class=\"counter\">{3}/100</div>"
-                                                     "<a class=\"plus rating_button\" href=\"#\"><i class=\"fa fa-arrow-up\"></i></a>"
-                                                     "<a class=\"minus rating_button\" href=\"#\"><i class=\"fa fa-arrow-down\"></i></a>"
+                                                     "<a class=\"plus rating_button\" href=\"plus_rating?id={4}\"><i class=\"fa fa-arrow-up\"></i></a>"
+                                                     "<a class=\"minus rating_button\" href=\"minus_rating?id={4}\"><i class=\"fa fa-arrow-down\"></i></a>"
                                                      "</div>"
                                                      "</div>"
                                                      "</div>";
@@ -133,7 +167,7 @@ namespace pages {
                 if (result.desc.length() > max_size) desc = result.desc.substr(0, max_size - 3) + "...";
                 else desc = result.desc;
 
-                center_results_src.append(str::format(center_result_src_format, result.title, result.url, desc, ""));
+                center_results_src.append(str::format(center_result_src_format, result.title, result.url, desc, result.rating, result.id));
             }
         }
 
@@ -146,6 +180,30 @@ namespace pages {
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
+    static void plus_rating(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+        const std::string id = request.get_param_value("id");
+        const size_t rating = get_number_field_value(id, "rating", client);
+
+        if (rating  < 100) {
+            update(id, "rating", rating + 1, client);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        response.status = 301;
+        response.set_redirect(request.headers.find("Referer")->second);
+    }
+    static void minus_rating(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+        const std::string id = request.get_param_value("id");
+        const size_t rating = get_number_field_value(id, "rating", client);
+
+        if (rating > 0) {
+            update(id, "rating", rating - 1, client);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+
+        response.status = 301;
+        response.set_redirect(request.headers.find("Referer")->second);
+    }
     static void node_info(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
         std::string page_src = get_file_content("../../frontend/src/node/info.html");
 
@@ -153,7 +211,7 @@ namespace pages {
         page_src = str::replace(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url", client)));
 
         set_variables(page_src);
-        response.status = 200;
+        response.status = 301;
         response.set_content(page_src, "text/html");
     }
     static void not_found(const httplib::Request &request, httplib::Response &response) {
@@ -182,8 +240,10 @@ int main(int argc, char **argv) {
     server.set_mount_point("/", "../../frontend/");
 
     server.Get("/home", pages::home);
-    server.Get("/search", [&client](const httplib::Request &request, httplib::Response &response) { pages::search(request, response, client); });
-    server.Get("/node/info", [&client](const httplib::Request &request, httplib::Response &response) { pages::node_info(request, response, client); });
+    server.Get("/search", [&client](const httplib::Request &req, httplib::Response &res) { pages::search(req, res, client); });
+    server.Get("/plus_rating", [&client](const httplib::Request &req, httplib::Response &res) { pages::plus_rating(req, res, client); });
+    server.Get("/minus_rating", [&client](const httplib::Request &req, httplib::Response &res) { pages::minus_rating(req, res, client); });
+    server.Get("/node/info", [&client](const httplib::Request &req, httplib::Response &res) { pages::node_info(req, res, client); });
     server.Get(".*", pages::not_found);
 
     std::cout << "The server was started at http://127.0.0.1:" << port << std::endl;

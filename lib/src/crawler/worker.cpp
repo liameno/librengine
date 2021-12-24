@@ -147,6 +147,7 @@ namespace librengine::crawler {
         json["content"] = content;
         json["desc"] = desc;
         json["date"] = compute_time();
+        json["rating"] = 100;
 
         try {
             return json.dump();

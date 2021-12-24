@@ -21,7 +21,7 @@
 
 ::selection {
     color: var(--yellow);
-    background: var(--red);
+    background: #cb1d00;
 }
 
 @font-face {
@@ -72,4 +72,13 @@ html * {
 .main {
     width: 100%;
     height: 100%;
+}
+
+a {
+    text-decoration: none;
+    color: var(--red);
+}
+
+a:hover {
+    color: var(--yellow);
 }
