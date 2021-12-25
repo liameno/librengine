@@ -11,9 +11,9 @@ Private Web Search engine
 ## TODO
 -  Robots in headers && html, crawl-delay
 -  Encryption (public key)
--  ~~Site Rating~~
+-  ~~Site Rating~~ (24.12.21)
 -  CLI Search
--  API
+-  ~~API~~ (25.12.21)
 -  Export DB
 -  Images Crawler
 -  Admin Panel
