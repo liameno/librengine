@@ -4,8 +4,19 @@ Private Web Search engine
 [![https://raw.githubusercontent.com/liameno/librengine/master/search_page.png](https://raw.githubusercontent.com/liameno/librengine/master/search_page.png)]()
 ## Features
 -  Crawler
+	-  Http/Socks proxy (optional)
+	-  DeepMax
+	-  Timeout
+	-  Delay
+	-  UserAgent
+	-  Limits
+	-  Http To Https (optional)
+	-  Robots Txt (optional)
 -  Website
 	-  Search
+	-  Site Rating
+	-  NoJs
+	-  API
 	-  Node Info
 
 ## TODO

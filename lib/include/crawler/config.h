@@ -19,7 +19,7 @@ namespace librengine::crawler {
         size_t load_page_timeout_s            = 10;
         size_t update_time_site_info_s_after  = 864000;   //10 days
         size_t delay_time_s                   = 3;
-        size_t limit_pages_site               = 399;
+        size_t limit_pages_site               = 300;
 
         size_t limit_page_symbols             = 50000000;  //50 mb
         size_t limit_robots_txt_symbols       = 3000;
