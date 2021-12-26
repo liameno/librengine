@@ -24,6 +24,7 @@ namespace librengine::str {
     bool starts_with(const std::string &s, const std::string &value);
     bool ends_with(const std::string &s, const std::string &value);
     std::string replace(const std::string &s, const std::string &from, const std::string &to);
+    void replace_ref(std::string &s, const std::string &from, const std::string &to);
     std::string reverse(const std::string &s);
     bool is_number(const std::string &s);
 }

@@ -15,7 +15,7 @@ Private Web Search engine
 -  Website
 	-  Search
 	-  Site Rating
-	-  NoJs
+	-  Without Js
 	-  API
 	-  Node Info
 
@@ -28,6 +28,7 @@ Private Web Search engine
 -  Export DB
 -  Images Crawler
 -  Admin Panel
+-  Adaptive Website
 
 ## Dependencies
 Arch: `yay -S curl lexbor opensearch`

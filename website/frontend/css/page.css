@@ -16,6 +16,7 @@
     --blue_dark: #2597c4;
     --black: #000000;
     --black_transparent: rgba(0, 0, 0, 0.9);
+    --black_transparent2: rgba(0, 0, 0, 0.8);
     --yellow: #f8ab37;
 }
 
@@ -32,7 +33,6 @@
 }
 
 .background {
-    background: var(--dark);
     background: url("../assets/forest_cs.jpg") no-repeat center center fixed;
     background-size: cover;
     transform: scale(1.1);

@@ -3,13 +3,13 @@ project(librengine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(include include/opensearch.h include/http.h include/str.h include/str_impl.h)
-set(include_crawler include/crawler/worker.h include/crawler/config.h)
+set(include include/opensearch.h include/http.h include/str.h include/str_impl.h include/config.h include/json.hpp)
+set(include_crawler include/crawler/worker.h)
 
 set(src src/opensearch.cpp src/http.cpp src/str.cpp)
 set(src_crawler src/crawler/worker.cpp)
 
-set(tp_json third_party/json/json.hpp) #https://github.com/nlohmann/json
+#set(tp_json include/json.hpp) #https://github.com/nlohmann/json
 set(tp_rep_cpp third_party/rep-cpp/agent.cpp third_party/rep-cpp/agent.h
         third_party/rep-cpp/directive.cpp third_party/rep-cpp/directive.h third_party/rep-cpp/robots.cpp
         third_party/rep-cpp/robots.h) #robots.txt / https://github.com/seomoz/rep-cpp
@@ -36,7 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC include)
 include(GNUInstallDirs)
 
 install(FILES ${include} DESTINATION include/${PROJECT_NAME})
-install(FILES ${tp_json} DESTINATION include/${PROJECT_NAME}/third_party/json)
+#install(FILES ${tp_json} DESTINATION ${PROJECT_NAME}/third_party/json)
 install(FILES ${include_crawler} DESTINATION include/${PROJECT_NAME}/crawler)
 install(FILES ${src} DESTINATION src/${PROJECT_NAME})
 install(FILES ${src_crawler} DESTINATION src/${PROJECT_NAME}/crawler)

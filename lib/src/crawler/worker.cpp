@@ -5,11 +5,11 @@
 #include <thread>
 #include <utility>
 
-#include "crawler/config.h"
+#include "config.h"
 #include "http.h"
 #include "str.h"
 #include "opensearch.h"
-#include "../../third_party/json/json.hpp"
+#include "json.hpp"
 #include "../../third_party/rep-cpp/robots.h"
 
 #define DEBUG true //TODO: false
@@ -277,7 +277,7 @@ namespace librengine::crawler {
         return desc;
     }
 
-    worker::worker(config config, opensearch::client opensearch_client) : current_config(std::move(config)), opensearch_client(std::move(opensearch_client)) {
+    worker::worker(config::crawler config, opensearch::client opensearch_client) : current_config(std::move(config)), opensearch_client(std::move(opensearch_client)) {
         this->is_work = true;
     }
 
@@ -294,7 +294,7 @@ namespace librengine::crawler {
         if (hints_count_added("url", url.text) > 0) { if_debug_print("error", "already added", url.text); return result::already_added; }
 
         size_t pages_count = hints_count_added("host", *url.host);
-        if (pages_count >= this->current_config.limit_pages_site) { if_debug_print("error", "pages count >= limit", url.text);  return result::pages_limit; }
+        if (pages_count >= this->current_config.max_pages_site) { if_debug_print("error", "pages count >= limit", url.text);  return result::pages_limit; }
 
         if (this->current_config.is_check_robots_txt) {
             auto robots_txt_body = get_added_robots_txt(*url.host).value_or("");
@@ -304,7 +304,7 @@ namespace librengine::crawler {
                 robots_txt_body = get_robots_txt(url).value_or("");
                 auto robots_txt_body_length = robots_txt_body.length();
 
-                if (robots_txt_body_length > 1 && robots_txt_body_length < this->current_config.limit_robots_txt_symbols) {
+                if (robots_txt_body_length > 1 && robots_txt_body_length < this->current_config.max_robots_txt_symbols) {
                     const auto json = compute_robots_txt_json(robots_txt_body, *url.host);
                     if (!json) return result::null_or_limit;
 
@@ -324,7 +324,7 @@ namespace librengine::crawler {
         auto response_length = response->length();
         if_debug_print("info", "response length = " + str::to_string(response_length), url.text);
 
-        if (!response || response_length < 1 || response_length >= this->current_config.limit_page_symbols)
+        if (!response || response_length < 1 || response_length >= this->current_config.max_page_symbols)
         { if_debug_print("error", "response = null || length < 1 || >= limit", url.text); return result::null_or_limit; }
 
         auto document = parse_html(*response);
@@ -350,7 +350,7 @@ namespace librengine::crawler {
         opensearch_client.custom_request(path, type, json);
         std::cout << "[" << url.text << "]" << std::endl; //TODO: print
 
-        if (deep < this->current_config.recursive_deep_max) {
+        if (deep < this->current_config.max_recursive_deep) {
             auto collection = lxb_dom_collection_make(&(*document)->dom_document, 16);
             lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, std_string_to_lxb("a"), 1);
             const auto a_length = collection->array.length;

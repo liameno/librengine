@@ -25,11 +25,20 @@
         </div>
     </header>
     <div class="center_container">
+        <div class="title">librengine</div>
         <form class="search_widget" action="search" method="GET">
-            <input class="input" name="q" type="search" value="" placeholder="" required>
-            <button class="button" type="submit">
-                <i class="fa fa-search"></i>
-            </button>
+            <div class="search">
+                <input class="input" name="q" type="search" value="{QUERY}" placeholder="" required>
+                <input name="s" value="0" style="display: none">
+                <button class="button" type="submit">
+                    <i class="fa fa-search"></i>
+                </button>
+                </div>
+                <div class="checkboxes">
+                    <div class="content_checkboxes">
+                        {CHECKBOXES}
+                    </div>
+                </div>
         </form>
     </div>
 </div>

@@ -2,7 +2,7 @@
 #include <lexbor/html/html.h>
 #include <optional>
 
-#include "config.h"
+#include "../config.h"
 #include "../opensearch.h"
 
 #ifndef WORKER_H
@@ -21,7 +21,7 @@ namespace librengine::crawler {
             error,
         };
     private:
-        config current_config;
+        config::crawler current_config;
         opensearch::client opensearch_client;
         bool is_work = false;
     public:
@@ -49,7 +49,7 @@ namespace librengine::crawler {
         static std::string get_desc(lxb_html_document *document);
         static std::string compute_desc(const std::string &tag_name, lxb_html_document *document);
     public:
-        worker(config config, opensearch::client opensearch_client);
+        worker(config::crawler config, opensearch::client opensearch_client);
         result main_thread(const std::string &site_url, int &deep, const std::optional<std::string> &owner_host = std::nullopt);
     };
 }

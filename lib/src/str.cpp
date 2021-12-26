@@ -162,6 +162,21 @@ namespace librengine::str {
         return result;
     }
 
+    void replace_ref(std::string &s, const std::string &from, const std::string &to) {
+        size_t start_pos = 0;
+
+        while (true) {
+            start_pos = s.find(from, start_pos);
+
+            if (start_pos == std::string::npos) {
+                break;
+            }
+
+            s.replace(start_pos, from.length(), to);
+            start_pos += to.length();
+        }
+    }
+
     std::string reverse(const std::string &s) {
         return {s.rbegin(), s.rend()};
     }

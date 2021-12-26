@@ -1,0 +1,28 @@
+{
+  "crawler": {
+    "user_agent": "librengine",
+    "opensearch_url": "http://localhost:9200",
+    "proxy": "socks5://127.0.0.1:9050",
+    "load_page_timeout_s": 10,
+    "update_time_site_info_s_after": 86400,
+    "delay_time_s": 3, 
+    "max_recursive_deep": 3,
+    "max_pages_site": 5,
+    "max_page_symbols": 50000000,
+    "max_robots_txt_symbols": 3000,
+    "is_http_to_https": true,
+    "is_check_robots_txt": true
+  },
+  "website": {
+    "port": 8080,
+    "proxy": "",
+    "nodes": [ {
+        "name": "This",
+        "url": "http://127.0.0.1:8080"
+      }, {
+        "name": "2",
+        "url": "http://127.0.0.1:1356"
+      }
+    ]
+  }
+}
