@@ -31,7 +31,8 @@ namespace librengine::http {
         std::string compute_curl_format() const;
 
         proxy(const std::string &ip, const std::string &port, const proxy_type &type = proxy_type::http);
-        explicit proxy(const std::string &full, const proxy_type &type = proxy_type::http);
+        explicit proxy(const std::string &full);
+        explicit proxy(const std::string &full, const proxy_type &type);
     };
 
     struct header {
@@ -72,16 +73,18 @@ namespace librengine::http {
 
     class request {
     public:
+        struct result_s {
+            std::optional<std::string> response;
+            long code {0};
+            CURLcode curl_code; //https://curl.se/libcurl/c/libcurl-errors.html
+        };
         struct {
             int timeout_s {5};
             std::optional<std::string> user_agent;
             std::optional<http::proxy> proxy;
             std::shared_ptr<std::vector<header>> headers;
         } options;
-        struct {
-            std::optional<std::string> response;
-            long code {0};
-        } result;
+        result_s result;
     private:
         CURL *curl;
         std::string url;

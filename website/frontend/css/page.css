@@ -1,6 +1,7 @@
 :root {
     --light: #f0eff3;
-    --dark: #1f1f1f;
+    /*#1f1f1f*/
+    --dark: #090909;
     --dark_blue: #1f2029;
     --dark_light2: #525252;
     --dark_light: #424242;
@@ -33,7 +34,7 @@
 }
 
 .background {
-    background: url("../assets/forest_cs.jpg") no-repeat center center fixed;
+    background: url("../assets/black_lines_background_spot_69524_1920x1080.jpg") no-repeat center center fixed;
     background-size: cover;
     transform: scale(1.1);
     filter: blur(5px);

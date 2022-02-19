@@ -7,12 +7,13 @@ curl -XPUT "$ES_URL/website" -d'{
         "autocomplete": {
           "tokenizer": "autocomplete",
           "filter": [
-            "lowercase"
-          ]
+            "lowercase",
+	    "word_delimiter"
+	  ]
         },
         "autocomplete_search": {
           "tokenizer": "lowercase"
-        },
+	},
         "not_analyzed": {
 
         }

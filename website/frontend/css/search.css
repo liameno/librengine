@@ -41,11 +41,22 @@
 }
 
 .input {
+    margin-left: 7px;
+    position: relative;
+    border: 0;
+    width: 100%;
+    height: 50px;
+    background-color: var(--dark);
+    color: var(--white);
+    outline: none;
+}
+
+.input_container {
+    width: 100%;
     position: relative;
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
     border: 0;
-    width: 100%;
     height: 50px;
     background-color: var(--dark);
     color: var(--white);

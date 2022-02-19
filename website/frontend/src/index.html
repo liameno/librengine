@@ -28,8 +28,10 @@
         <div class="title">librengine</div>
         <form class="search_widget" action="search" method="GET">
             <div class="search">
-                <input class="input" name="q" type="search" value="{QUERY}" placeholder="" required>
-                <input name="s" value="0" style="display: none">
+                <div class="input_container">
+                    <input class="input" name="q" type="search" value="{QUERY}" placeholder="" required>
+                </div>
+                <input name="s" value="0" type="hidden">
                 <button class="button" type="submit">
                     <i class="fa fa-search"></i>
                 </button>

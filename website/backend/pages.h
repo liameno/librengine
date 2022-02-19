@@ -14,6 +14,14 @@
 #ifndef PAGES_H
 #define PAGES_H
 
+#define DEBUG true //TODO: false
+
+void if_debug_print(const std::string &type, const std::string &text, const std::string &ident) {
+#if DEBUG
+    std::cout << "[" << librengine::str::to_upper(type) << "] " << text << " [" << ident << "]" << std::endl;
+#endif
+}
+
 namespace backend::pages {
     using namespace librengine;
 
@@ -61,6 +69,32 @@ namespace backend::pages {
 
         return 0;
     }
+    /*static size_t get_last_added_website_date(opensearch::client &client) {
+        const auto path = opensearch::client::path_options("website/_search");
+        const auto type = opensearch::client::request_type::POST;
+
+        nlohmann::json json;
+
+        json["size"] = 1;
+        json["sort"][0]["date"]["order"] = "desc";
+
+        const auto response = client.custom_request(path, type, json.dump());
+        nlohmann::json result_json = nlohmann::json::parse(*response);
+        const auto value = result_json["hits"]["total"]["value"];
+
+        if (value.is_null()) return std::nullopt;
+        if (value < 0) return std::nullopt;
+
+        const auto body = result_json["hits"]["hits"];
+        if (body.is_null()) return std::nullopt;
+
+        auto hit = body[0];
+
+        size_t hit_date = hit["_source"]["date"];
+        size_t current_date = time(nullptr);
+
+        return current_date - hit_date;
+    }*/
     static std::optional<std::vector<search_result>> search(const std::string &q, const size_t &s, opensearch::client &client) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
@@ -87,13 +121,16 @@ namespace backend::pages {
 
         for (int i = 0; i < value; ++i) {
             search_result result;
+            auto hit = body[i];
+
+            //if_debug_print("info", "score = " + hit["_score"].get<std::string>(), hit["_source"]["title"]);
 
             try {
-                result.id = result_json["hits"]["hits"][i]["_id"];
-                result.title = result_json["hits"]["hits"][i]["_source"]["title"];
-                result.url = result_json["hits"]["hits"][i]["_source"]["url"];
-                result.desc = result_json["hits"]["hits"][i]["_source"]["desc"];
-                result.rating = result_json["hits"]["hits"][i]["_source"]["rating"];
+                result.id = hit["_id"];
+                result.title = hit["_source"]["title"];
+                result.url = hit["_source"]["url"];
+                result.desc = hit["_source"]["desc"];
+                result.rating = hit["_source"]["rating"];
             } catch (const nlohmann::json::exception &e) {
                 continue;
             }
@@ -147,6 +184,9 @@ namespace backend::pages {
         auto s_ = request.get_param_value("s");
         const size_t start_index = (!s_.empty()) ? std::stoi(s_) : 0;
 
+        if_debug_print("INFO", "q = " + query, request.path);
+        if_debug_print("INFO", "s = " + s_, request.path);
+
         const std::string center_result_src_format = "<div class=\"center_result\">"
                                                      "<div class=\"content\">"
                                                      "<a class=\"title\" href=\"{1}\">{0}</a>"
@@ -155,47 +195,56 @@ namespace backend::pages {
                                                      "</div>"
                                                      "<div class=\"rating_container\">"
                                                      "<div class=\"rating\">"
-                                                     "<div class=\"counter\">{3}/100</div>"
-                                                     "<a class=\"plus rating_button\" href=\"{4}/api/plus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-up\"></i></a>"
-                                                     "<a class=\"minus rating_button\" href=\"{4}/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
+                                                     "<div class=\"counter\">{3}/200</div>"
+                                                     "<a class=\"plus rating_button\" href=\"/api/plus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-up\"></i></a>"
+                                                     "<a class=\"minus rating_button\" href=\"/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
                                                      "</div>"
                                                      "</div>"
                                                      "</div>";
+        const std::string search_param_src_format = "<input name=\"{0}\" type=\"hidden\" value=\"{1}\">";
         std::string center_results_src;
         std::string params_s = "?q=" + query + "&s=" + s_;
+        std::string search_param_inputs;
 
         for (const auto &param : request.params) {
+            if (param.first == "q" && param.first == "s") { continue; }
             for (const auto &node : config.nodes) {
-                if (param.first != "q" && param.first != "s" && param.first == node.name) {
-                    params_s.append("&" + param.first + "=" + param.second);
+                if (param.first != node.name) { continue; }
 
-                    http::request request_(node.url + "/api/search" + "?q=" + query + "&s=" + std::to_string(start_index));
-                    request_.perform();
+                if_debug_print("INFO", "param = " + param.first, request.path);
+                params_s.append("&" + param.first + "=" + param.second);
+                search_param_inputs.append(str::format(search_param_src_format, param.first, param.second));
 
-                    if (request_.result.code != 200 || request_.result.response->empty()) break;
+                std::string search_url = str::format("{0}/api/search?q={1}&s={2}", node.url, str::replace(query, " ", "+"), s_);
+                http::request request_(search_url);
+                request_.perform();
 
-                    nlohmann::json json = nlohmann::json::parse(*request_.result.response);
-                    const auto size = json["count"];
+                if_debug_print("INFO", "search result code = " + std::to_string(request_.result.code), search_url);
+                if_debug_print("INFO", "search response is empty = " + std::to_string(request_.result.response->empty()), search_url);
+                if (request_.result.code != 200 || request_.result.response->empty()) break;
 
-                    for (int i = 0; i < size; ++i) {
-                        const auto result = json["results"][i];
-                        const auto title = result["title"].get<std::string>();
-                        const auto url = result["url"].get<std::string>();
-                        const auto desc = result["desc"].get<std::string>();
-                        const auto rating = result["rating"].get<size_t>();
-                        const auto id = result["id"].get<std::string>();
+                nlohmann::json json = nlohmann::json::parse(*request_.result.response);
+                const auto size = json["count"];
 
-                        center_results_src.append(str::format(center_result_src_format, title, url, desc, rating, id, node.url));
-                    }
+                for (int i = 0; i < size; ++i) {
+                    const auto result = json["results"][i];
+                    const auto title = result["title"].get<std::string>();
+                    const auto url = result["url"].get<std::string>();
+                    const auto desc = result["desc"].get<std::string>();
+                    const auto rating = result["rating"].get<size_t>();
+                    const auto id = result["id"].get<std::string>();
 
-                    break;
+                    center_results_src.append(str::format(center_result_src_format, title, url, desc, rating, id, node.url));
                 }
+
+                break;
             }
         }
 
         std::string url = request.path + params_s;
         str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src);
         str::replace_ref(page_src, "{QUERY}", query);
+        str::replace_ref(page_src, "{SEARCH}", search_param_inputs);
         str::replace_ref(page_src, "{PREV_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string((start_index >= 10) ? start_index - 10 : 0)));
         str::replace_ref(page_src, "{NEXT_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string(start_index + 10)));
 
@@ -218,7 +267,7 @@ namespace backend::pages {
         const std::string is_redirect = request.get_param_value("redirect");
         const size_t rating = get_number_field_value(id, "rating", client);
 
-        if (rating < 100) {
+        if (rating < 200) {
             update(id, "rating", rating + 1, client);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
@@ -259,7 +308,10 @@ namespace backend::pages {
         nlohmann::json page_src;
 
         if (search_results) {
-            for (int i = 0; i < search_results->size(); ++i) {
+            auto sr_size = search_results->size();
+            if_debug_print("INFO", "search_results = " + sr_size, request.path);
+
+            for (int i = 0; i < sr_size; ++i) {
                 const auto &result = search_results->operator[](i);
                 std::string desc;
                 const size_t max_size = 350;
@@ -275,6 +327,8 @@ namespace backend::pages {
             }
 
             page_src["count"] = search_results->size();
+        } else {
+            if_debug_print("INFO", "search_results = null", request.path);
         }
 
         response.status = 200;

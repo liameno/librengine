@@ -138,13 +138,12 @@ namespace librengine::crawler {
         return json.dump();
     }
 
-    std::optional<std::string> worker::compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &content, const std::string &desc) {
+    std::optional<std::string> worker::compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &desc) {
         nlohmann::json json;
 
         json["title"] = title;
         json["url"] = url;
         json["host"] = host;
-        json["content"] = content;
         json["desc"] = desc;
         json["date"] = compute_time();
         json["rating"] = 100;
@@ -207,15 +206,15 @@ namespace librengine::crawler {
         return 0;
     }
 
-    std::optional<std::string> worker::site(const http::url &url) {
+    http::request::result_s worker::site(const http::url &url) {
         http::request request(url.text);
+
         request.options.timeout_s = this->current_config.load_page_timeout_s;
         request.options.user_agent = this->current_config.user_agent;
         request.options.proxy = this->current_config.proxy;
         request.perform();
 
-        if (request.result.code != 200) return std::nullopt;
-        return request.result.response;
+        return request.result;
     }
     bool worker::is_allowed_in_robots(const std::string &body, const std::string &url) const {
         Rep::Robots robots = Rep::Robots(body);
@@ -282,15 +281,18 @@ namespace librengine::crawler {
     }
 
 
-    worker::result worker::main_thread(const std::string &site_url, int &deep, const std::optional<std::string> &owner_host) {
+    worker::result worker::main_thread(const std::string &site_url, int &deep, const std::optional<http::url> &owner_url) {
         if (!is_work) return result::work_false;
 
         http::url url(str::to_lower(site_url));
         url.parse();
 
-        if (!normalize_url(url, owner_host.value_or(""))) { if_debug_print("error", "normalize url", url.text); return result::error; }
-        if (url.text == owner_host) { if_debug_print("error", "url == owner", url.text); return result::already_added; }
+        std::string owner_url_text = (owner_url) ? owner_url->text : "";
+
+        if (!normalize_url(url, owner_url_text)) { if_debug_print("error", "normalize url", url.text); return result::error; }
+        if (url.text == owner_url_text) { if_debug_print("error", "url == owner", url.text); return result::already_added; }
         if (!url.host) { if_debug_print("error", "url host == null", url.text); return result::null_or_limit; }
+        if (current_config.is_one_site && owner_url && url.host != owner_url->host) { return result::already_added; }
         if (hints_count_added("url", url.text) > 0) { if_debug_print("error", "already added", url.text); return result::already_added; }
 
         size_t pages_count = hints_count_added("host", *url.host);
@@ -320,9 +322,12 @@ namespace librengine::crawler {
             if (is_check && !is_allowed_in_robots(robots_txt_body, url.text)) return result::disallowed_robots;
         }
 
-        auto response = site(url);
+        auto request_result = site(url);
+        auto response = (request_result.code == 200) ? request_result.response : std::nullopt;
         auto response_length = response->length();
+
         if_debug_print("info", "response length = " + str::to_string(response_length), url.text);
+        if_debug_print("info", "curl code = " + str::to_string(request_result.curl_code), url.text);
 
         if (!response || response_length < 1 || response_length >= this->current_config.max_page_symbols)
         { if_debug_print("error", "response = null || length < 1 || >= limit", url.text); return result::null_or_limit; }
@@ -341,7 +346,7 @@ namespace librengine::crawler {
             desc.append(compute_desc("p", *document));
         }
 
-        const auto json = compute_website_json(title, url.text, *url.host, ""/*content*/, desc);
+        const auto json = compute_website_json(title, url.text, *url.host, desc);
         if (!json) return result::null_or_limit;
 
         const auto path = opensearch::client::path_options("website/_doc");
@@ -354,32 +359,33 @@ namespace librengine::crawler {
             auto collection = lxb_dom_collection_make(&(*document)->dom_document, 16);
             lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, std_string_to_lxb("a"), 1);
             const auto a_length = collection->array.length;
+            std::vector<std::string> pages_limit_hosts;
             ++deep;
 
             for (size_t i = 0; i < a_length; i++) {
                 auto element = lxb_dom_collection_element(collection, i);
                 const auto href_value = lxb_string_to_std(lxb_dom_element_get_attribute(element, std_string_to_lxb("href"), 4, nullptr));
-                std::vector<std::string> pages_limit_hosts;
 
-                if (href_value && *href_value != url.text && !str::starts_with(*href_value, "#")) {
-                    http::url href_url(*href_value);
-                    href_url.parse();
+                if (!href_value && *href_value == url.text && str::starts_with(*href_value, "#")) continue;
 
-                    if (!href_url.host || str::contains(pages_limit_hosts, *href_url.host, true)) continue;
+                http::url href_url(*href_value);
+                href_url.parse();
 
+                if (!href_url.host || str::contains(pages_limit_hosts, *href_url.host, true)) continue;
+
+                std::this_thread::sleep_for(std::chrono::seconds(this->current_config.delay_time_s));
+                result result;
+
+                if (!str::starts_with(*href_value, "http")) result = main_thread(href_url.text, deep, url);
+                else {
+                    if (current_config.is_one_site && href_url.host != url.host) continue;
+                    result = main_thread(*href_value, deep);
+                }
+
+                if (result == result::work_false)  break;
+                if (result == result::pages_limit) pages_limit_hosts.push_back(*href_url.host);
+                if (result == result::added || result == result::disallowed_robots) {
                     std::this_thread::sleep_for(std::chrono::seconds(this->current_config.delay_time_s));
-                    result result;
-
-                    if (!str::starts_with(*href_value, "http")) result = main_thread(href_url.text, deep, url.text);
-                    else result = main_thread(*href_value, deep);
-
-                    if (result == result::work_false) {
-                        break;
-                    } if (result == result::pages_limit) {
-                        pages_limit_hosts.push_back(*href_url.host);
-                    } if (result == result::added || result == result::disallowed_robots) {
-                        std::this_thread::sleep_for(std::chrono::seconds(this->current_config.delay_time_s));
-                    }
                 }
             }
 

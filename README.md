@@ -1,4 +1,6 @@
 ## Librengine
+![GitHub top language](https://img.shields.io/github/languages/top/liameno/librengine) ![GitHub](https://img.shields.io/github/license/liameno/librengine)
+
 Private Web Search engine
 ## Website
 [![https://raw.githubusercontent.com/liameno/librengine/master/search_page.png](https://raw.githubusercontent.com/liameno/librengine/master/search_page.png)]()
@@ -20,15 +22,15 @@ Private Web Search engine
 	-  Node Info
 
 ## TODO
--  Robots in headers && html, crawl-delay
--  Encryption (public key)
--  ~~Site Rating~~ (24.12.21)
--  CLI Search
--  ~~API~~ (25.12.21)
--  Export DB
--  Images Crawler
--  Admin Panel
--  Adaptive Website
+- [ ]Robots in headers && html, crawl-delay
+- [ ]Encryption (assymetric)
+- [x]Site Rating
+- [ ]CLI Search
+- [x]API
+- [ ]Export DB
+- [ ]Images Crawler
+- [ ]Admin Panel
+- [ ]Adaptive Website
 
 ## Dependencies
 Arch: `yay -S curl lexbor opensearch`

@@ -42,7 +42,7 @@ namespace librengine::crawler {
         std::optional<std::string> get_added_robots_txt(const std::string &host);
         size_t hints_count_added(const std::string &field, const std::string &url);
 
-        std::optional<std::string> site(const http::url &url);
+        http::request::result_s site(const http::url &url);
         bool is_allowed_in_robots(const std::string &body, const std::string &url) const;
         std::optional<std::string> get_robots_txt(const http::url &url);
 
@@ -50,7 +50,7 @@ namespace librengine::crawler {
         static std::string compute_desc(const std::string &tag_name, lxb_html_document *document);
     public:
         worker(config::crawler config, opensearch::client opensearch_client);
-        result main_thread(const std::string &site_url, int &deep, const std::optional<std::string> &owner_host = std::nullopt);
+        result main_thread(const std::string &site_url, int &deep, const std::optional<http::url> &owner_url = std::nullopt);
     };
 }
 

@@ -23,6 +23,9 @@ namespace librengine::http {
         this->type = type;
         set_full();
     }
+    proxy::proxy(const std::string &full) {
+        set_full(full);
+    }
     proxy::proxy(const std::string &full, const proxy_type &type) {
         auto split = str::split(full, ":");
 
@@ -180,21 +183,14 @@ namespace librengine::http {
             curl_headers = curl_slist_append(curl_headers, header_.full.c_str());
         }
 
-        if (curl_headers == nullptr) {
-            curl_headers = curl_slist_append(curl_headers, "");
-        }
-
+        if (curl_headers == nullptr) { curl_headers = curl_slist_append(curl_headers, ""); }
         return curl_headers;
     }
 
     void request::perform() {
-        if (options.proxy) {
-            curl_easy_setopt(curl, CURLOPT_PROXY, options.proxy.value().compute_curl_format().c_str());
-        } if (options.user_agent) {
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, options.user_agent.value().c_str());
-        } if (options.timeout_s > 0) {
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout_s);
-        }
+        if (options.proxy) { curl_easy_setopt(curl, CURLOPT_PROXY, options.proxy.value().compute_curl_format().c_str()); }
+        if (options.user_agent) { curl_easy_setopt(curl, CURLOPT_USERAGENT, options.user_agent.value().c_str()); }
+        if (options.timeout_s > 0) { curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout_s); }
 
         struct curl_slist *curl_headers = headers_to_curl_struct(options.headers);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
@@ -206,7 +202,7 @@ namespace librengine::http {
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &temp_response);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_function);
 
-        curl_easy_perform(curl);
+        result.curl_code = curl_easy_perform(curl);
         if (!temp_response.empty()) result.response = temp_response;
 
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &result.code);
