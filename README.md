@@ -44,7 +44,7 @@ yay -S curl lexbor opensearch
 Debian: 
 ```shell
 sudo apt install libcurl4-openssl-dev &&
-wget https://artifacts.opensearch.org/releases/bundle/opensearch/1.2.4/opensearch-1.2.4-linux-	x64.tar.gz &&
+wget https://artifacts.opensearch.org/releases/bundle/opensearch/1.2.4/opensearch-1.2.4-linux-x64.tar.gz &&
 tar -zxf opensearch-1.2.4-linux-x64.tar.gz && cd opensearch-1.2.4 && 
 ./opensearch-tar-install.sh &&
 git clone https://github.com/lexbor/lexbor && 
