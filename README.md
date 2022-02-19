@@ -22,15 +22,15 @@ Private Opensource Web Search Engine
 	-  Node Info
 
 ## TODO
-- [ ]Robots in headers && html, crawl-delay
-- [ ]Encryption (assymetric)
-- [x]Site Rating
-- [ ]CLI Search
-- [x]API
-- [ ]Export DB
-- [ ]Images Crawler
-- [ ]Admin Panel
-- [ ]Adaptive Website
+- [ ] Robots in headers && html, crawl-delay
+- [ ] Encryption (assymetric)
+- [x] Site Rating
+- [ ] CLI Search
+- [x] API
+- [ ] Export DB
+- [ ] Images Crawler
+- [ ] Admin Panel
+- [ ] Adaptive Website
 
 ## Dependencies
 Arch: `yay -S curl lexbor opensearch`
