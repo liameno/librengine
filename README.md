@@ -22,18 +22,35 @@ Private Opensource Web Search Engine
 	-  Node Info
 
 ## TODO
-- [ ]Robots in headers && html, crawl-delay
-- [ ]Encryption (assymetric)
-- [x]Site Rating
-- [ ]CLI Search
-- [x]API
-- [ ]Export DB
-- [ ]Images Crawler
-- [ ]Admin Panel
-- [ ]Adaptive Website
+- [ ] Robots in headers && html, crawl-delay
+- [ ] Encryption (assymetric)
+- [x] Site Rating
+- [ ] CLI Search
+- [x] API
+- [ ] Export DB
+- [ ] Images Crawler
+- [ ] Admin Panel
+- [ ] Adaptive Website
 
 ## Dependencies
-Arch: `yay -S curl lexbor opensearch`
+- libcurl 		(https://github.com/curl/curl)
+- lexbor		(https://github.com/lexbor/lexbor)
+- opensearch	(https://www.opensearch.org/)
+
+Arch: 
+```shell
+yay -S curl lexbor opensearch
+```
+Debian: 
+```shell
+sudo apt install libcurl4-openssl-dev &&
+wget https://artifacts.opensearch.org/releases/bundle/opensearch/1.2.4/opensearch-1.2.4-linux-	x64.tar.gz &&
+tar -zxf opensearch-1.2.4-linux-x64.tar.gz && cd opensearch-1.2.4 && 
+./opensearch-tar-install.sh &&
+git clone https://github.com/lexbor/lexbor && 
+cd lexbor &&
+cmake . && make && sudo make install
+```
 ## Build
 ```shell
 git clone https://github.com/liameno/librengine
@@ -105,3 +122,4 @@ sudo chmod -R 777 /usr/share/opensearch/logs
 
 ## License
 GNU General Public License v3.0
+
