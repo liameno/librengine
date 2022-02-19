@@ -22,15 +22,15 @@ Private Opensource Web Search Engine
 	-  Node Info
 
 ## TODO
-- [ ] Robots in headers && html, crawl-delay
-- [ ] Encryption (assymetric)
-- [x] Site Rating
-- [ ] CLI Search
-- [x] API
-- [ ] Export DB
-- [ ] Images Crawler
-- [ ] Admin Panel
-- [ ] Adaptive Website
+- [ ]Robots in headers && html, crawl-delay
+- [ ]Encryption (assymetric)
+- [x]Site Rating
+- [ ]CLI Search
+- [x]API
+- [ ]Export DB
+- [ ]Images Crawler
+- [ ]Admin Panel
+- [ ]Adaptive Website
 
 ## Dependencies
 Arch: `yay -S curl lexbor opensearch`
@@ -48,15 +48,54 @@ sh set_opensearch.sh
 #### Crawler
 ```shell
 cd crawler/build
-./crawler https://www.gnu.org socks5://127.0.0.1:9050
-#[start_site] [proxy = null] [recursive_deep_max = 3] [load_page_timeout_s = 10] [delay_time_s = 5] [limit_pages_site = 300]
+./crawler https://www.gnu.org ../../config.json
+#[start_site] [config path]
 ```
 #### Backend
 ```shell
 cd website/backend/build
-./backend 8080
-#[port]
+./backend ../../config.json
+#[config path]
 ```
+## Config 
+```json
+{
+  "crawler": {
+    "user_agent": "librengine",
+    "opensearch_url": "http://localhost:9200",
+    //type://ip:port
+    "proxy": "socks5://127.0.0.1:9050",
+    "load_page_timeout_s": 10,
+    "update_time_site_info_s_after": 86400,
+    "delay_time_s": 3, 
+    "max_recursive_deep": 3,
+    "max_pages_site": 3,
+    "max_page_symbols": 50000000,
+    "max_robots_txt_symbols": 3000,
+    "is_one_site": false,
+    "is_http_to_https": true,
+    "is_check_robots_txt": true
+  },
+  "cli": {
+    //local=0 | nodes=1(website/backend)
+    "mode": 0
+  },
+  "website": {
+    "port": 8080,
+    //type://ip:port
+    "proxy": "",
+    "nodes": [ {
+        "name": "This",
+        "url": "http://127.0.0.1:8080"
+      }, {
+        "name": "2",
+        "url": "http://127.0.0.1:1356"
+      }
+    ]
+  }
+}
+```
+
 #### OpenSearch: Permissions Denied
 
 ```shell
@@ -66,4 +105,3 @@ sudo chmod -R 777 /usr/share/opensearch/logs
 
 ## License
 GNU General Public License v3.0
-
