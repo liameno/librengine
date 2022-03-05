@@ -119,6 +119,26 @@ namespace backend::pages {
         std::vector<search_result> results;
         results.reserve(value);
 
+        /*auto first_hit = body[0];
+        if(str::split(q, "+").size() == 1) {
+            const auto path = opensearch::client::path_options("website/_search");
+            const auto type = opensearch::client::request_type::POST;
+
+            nlohmann::json json;
+
+            json["query"]["query_string"]["fields"] = {"url"};
+            json["query"]["query_string"]["query"] = "https://" + first_hit["_source"]["host"].get<std::string>();
+            json["size"] = 10;
+            json["from"] = s;
+
+            const auto response = client.custom_request(path, type, json.dump());
+            nlohmann::json result_json = nlohmann::json::parse(*response);
+            const auto value = result_json["hits"]["total"]["value"];
+
+            if (value.is_null()) return std::nullopt;
+            if (value < 0) return std::nullopt;
+        }*/
+
         for (int i = 0; i < value; ++i) {
             search_result result;
             auto hit = body[i];
@@ -254,6 +274,16 @@ namespace backend::pages {
     }
     static void node_info(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
         std::string page_src = config::get_file_content("../../frontend/src/node/info.html");
+
+        str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host", client)));
+        str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url", client)));
+
+        set_variables(page_src);
+        response.status = 200;
+        response.set_content(page_src, "text/html");
+    }
+    static void node_admin_panel(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+        std::string page_src = config::get_file_content("../../frontend/src/node/admin_panel/index.html");
 
         str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host", client)));
         str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url", client)));

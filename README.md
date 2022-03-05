@@ -5,24 +5,20 @@ Private Opensource Web Search Engine
 ## Website
 [![https://raw.githubusercontent.com/liameno/librengine/master/preview.gif](https://raw.githubusercontent.com/liameno/librengine/master/preview.gif)]()
 ## Features
+-  Addon
+	-  Add Current Website
 -  Crawler
-	-  Http/Socks proxy (optional)
-	-  DeepMax
-	-  Timeout
-	-  Delay
-	-  UserAgent
-	-  Limits
-	-  Http To Https (optional)
-	-  Robots Txt (optional)
+	-  Proxy
+	-  Http To Https
+	-  Robots Txt
+	-  ...
 -  Website
-	-  Search
-	-  Site Rating
+	-  Rating
 	-  Without Js
 	-  API
-	-  Node Info
 
 ## TODO
-- [ ] Robots in headers && html, crawl-delay
+- [ ] Robots Rules from headers && html, crawl-delay
 - [ ] Encryption (assymetric)
 - [x] Site Rating
 - [ ] CLI Search
@@ -33,8 +29,8 @@ Private Opensource Web Search Engine
 - [ ] Adaptive Website
 
 ## Dependencies
-- libcurl 		(https://github.com/curl/curl)
-- lexbor		(https://github.com/lexbor/lexbor)
+- libcurl 	(https://github.com/curl/curl)
+- lexbor	(https://github.com/lexbor/lexbor)
 - opensearch	(https://www.opensearch.org/)
 
 Arch: 

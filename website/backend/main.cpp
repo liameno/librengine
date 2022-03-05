@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     server.Get("/home", [&](const httplib::Request &req, httplib::Response &res) { pages::home(req, res, config); });
     server.Get("/search", [&](const httplib::Request &req, httplib::Response &res) { pages::search(req, res, client, config); });
     server.Get("/node/info", [&](const httplib::Request &req, httplib::Response &res) { pages::node_info(req, res, client); });
+    server.Get("/node/admin_panel", [&](const httplib::Request &req, httplib::Response &res) { pages::node_admin_panel(req, res, client); });
     server.Get("/api/plus_rating", [&](const httplib::Request &req, httplib::Response &res) { pages::api_plus_rating(req, res, client); });
     server.Get("/api/minus_rating", [&](const httplib::Request &req, httplib::Response &res) { pages::api_minus_rating(req, res, client); });
     server.Get("/api/search", [&](const httplib::Request &req, httplib::Response &res) { pages::api_search(req, res, client); });
