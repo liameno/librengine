@@ -10,12 +10,11 @@ Private Opensource Web Search Engine
 -  Crawler
 	-  Proxy
 	-  Http To Https
-	-  Robots Txt
-	-  ...
+	-  Robots Txt...
 -  Website
 	-  Rating
 	-  Without Js
-	-  API
+	-  API...
 
 ## TODO
 - [ ] Robots Rules from headers && html, crawl-delay
