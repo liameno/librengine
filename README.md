@@ -1,4 +1,5 @@
-## Librengine
+<h1>Librengine <img src="https://raw.githubusercontent.com/liameno/librengine/master/website/frontend/favicon.ico" alt="drawing" width="30"/></h1>
+
 ![GitHub top language](https://img.shields.io/github/languages/top/liameno/librengine) ![GitHub](https://img.shields.io/github/license/liameno/librengine)
 
 Private Opensource Web Search Engine
@@ -117,4 +118,3 @@ sudo chmod -R 777 /usr/share/opensearch/logs
 
 ## License
 GNU General Public License v3.0
-
