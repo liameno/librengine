@@ -101,50 +101,52 @@ namespace librengine::http {
 
     void url::parse() {
         //https://curl.se/libcurl/c/parseurl.html
-        char *path;
+        char *v;
         curl_url_set(current_curl_url, CURLUPART_URL, text.c_str(), 0/*CURLU_DEFAULT_SCHEME*/);
 
-        auto c = curl_url_get(current_curl_url, CURLUPART_SCHEME, &path, 0);
-        if (!c) this->scheme = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_USER, &path, 0);
-        if (!c) this->user = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_PASSWORD, &path, 0);
-        if (!c) this->password = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_OPTIONS, &path, 0);
-        if (!c) this->options = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_HOST, &path, 0);
-        if (!c) this->host = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_ZONEID, &path, 0);
-        if (!c) this->zone_id = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_PATH, &path, 0);
-        if (!c) this->path = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_QUERY, &path, 0);
-        if (!c) this->query = path;
-        curl_free(path);
-        c = curl_url_get(current_curl_url, CURLUPART_FRAGMENT, &path, 0);
-        if (!c) this->fragment = path;
-        curl_free(path);
+        auto c = curl_url_get(current_curl_url, CURLUPART_SCHEME, &v, 0);
+        if (!c) this->scheme = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_USER, &v, 0);
+        if (!c) this->user = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_PASSWORD, &v, 0);
+        if (!c) this->password = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_OPTIONS, &v, 0);
+        if (!c) this->options = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_HOST, &v, 0);
+        if (!c) this->host = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_ZONEID, &v, 0);
+        if (!c) this->zone_id = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_PATH, &v, 0);
+        if (!c) this->path = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_QUERY, &v, 0);
+        if (!c) this->query = v;
+        curl_free(v);
+        c = curl_url_get(current_curl_url, CURLUPART_FRAGMENT, &v, 0);
+        if (!c) this->fragment = v;
+        curl_free(v);
 
         compute_text();
     }
     void url::compute_text() {
-        char *path;
-        auto c = curl_url_get(current_curl_url, CURLUPART_URL, &path, 0);
+        char *v;
+        auto c = curl_url_get(current_curl_url, CURLUPART_URL, &v, 0);
 
         if (!c) {
-            this->text = path;
+            this->text = v;
 
-            if (str::get_last_char(this->text) == '#') str::remove_last_char(this->text);
+            if (str::get_last_char(this->text) == '#') {
+                str::remove_last_char(this->text);
+            }
         }
 
-        curl_free(path);
+        curl_free(v);
     }
 
     void url::set(const CURLUPart &what, const std::string &value) {

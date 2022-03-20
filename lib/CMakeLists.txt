@@ -4,10 +4,10 @@ project(librengine LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 set(include include/opensearch.h include/http.h include/str.h include/str_impl.h include/config.h include/json.hpp)
-set(include_crawler include/crawler/worker.h)
+set(include_crawler include/crawler/worker.h include/crawler/helper.h)
 
 set(src src/opensearch.cpp src/http.cpp src/str.cpp)
-set(src_crawler src/crawler/worker.cpp)
+set(src_crawler src/crawler/worker.cpp src/crawler/helper.cpp)
 
 #set(tp_json include/json.hpp) #https://github.com/nlohmann/json
 set(tp_rep_cpp third_party/rep-cpp/agent.cpp third_party/rep-cpp/agent.h

@@ -5,7 +5,6 @@
 .rating_container {
     display: flex;
     justify-content: right;
-    width: 100%;
 }
 
 .top_container {
@@ -142,6 +141,22 @@
     color: var(--dark);
     background: var(--red);
     border-radius: 2px;
+}
+.title > span {
+    margin-left: 10px;
+}
+
+.info_icon {
+    margin-right: 5px;
+    font-size: 20px;
+}
+
+.info_good {
+    color: var(--green);
+}
+
+.info_bad {
+    color: var(--red2);
 }
 
 .rating_button {

@@ -51,6 +51,12 @@ curl -XPUT "$ES_URL/website" -d'{
       "rating": {
         "type": "byte"
       },
+      "has_ads": {
+	"type": "boolean"
+      },
+      "has_analytics": {
+        "type": "boolean"
+      },
       "date": {
         "type": "date"
       }

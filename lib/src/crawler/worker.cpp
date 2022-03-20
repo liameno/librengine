@@ -5,56 +5,59 @@
 #include <thread>
 #include <utility>
 
+#include "crawler/helper.h"
 #include "config.h"
 #include "http.h"
 #include "str.h"
 #include "opensearch.h"
-#include "json.hpp"
 #include "../../third_party/rep-cpp/robots.h"
 
-#define DEBUG true //TODO: false
-#define DEBUG_NORMALIZE false //TODO: false
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define WHITE   "\033[37m"
 
-void if_debug_print(const std::string &type, const std::string &text, const std::string &ident) {
+#define DEBUG true //TODO: false
+
+enum class debug_type {
+    info,
+    error,
+};
+
+void if_debug_print(const debug_type &type, const std::string &text, const std::string &ident) {
+    std::string type_s;
+    std::string type_color;
+
+    switch (type) {
+        case debug_type::info:
+            type_s = "INFO";
+            type_color = CYAN;
+            break;
+        case debug_type::error:
+            type_s = "ERROR";
+            type_color = RED;
+            break;
+    }
 #if DEBUG
-    std::cout << "[" << librengine::str::to_upper(type) << "] " << text << " [" << ident << "]" << std::endl;
-#endif
-}
-void if_debug_normalize_print(const std::string &type, const std::string &text, const std::string &ident) {
-#if DEBUG_NORMALIZE
-    std::cout << "[" << librengine::str::to_upper(type) << "] " << text << " [" << ident << "]" << std::endl;
+std::cout << type_color << "[" << type_s << "] " << GREEN << text << WHITE << " [" << ident << "]" << std::endl;
 #endif
 }
 
 namespace librengine::crawler {
-    size_t worker::compute_time() {
-        return time(nullptr);
-    }
+    using namespace opensearch;
 
-    std::optional<std::string> worker::lxb_string_to_std(const lxb_char_t *s) {
-        if (s == nullptr) return std::nullopt;
-        return reinterpret_cast<const char *>(s);
-    }
-    lxb_char_t *worker::std_string_to_lxb(const std::string &s) {
-        return (lxb_char_t *) s.c_str();
-    }
-
-    std::optional<lxb_html_document*> worker::parse_html(const std::string &response) {
-        auto parser = lxb_html_parser_create();
-        auto status = lxb_html_parser_init(parser);
-
-        if (status != LXB_STATUS_OK) return std::nullopt;
-        auto document = lxb_html_parse(parser, std_string_to_lxb(response), response.length() - 1);
-        lxb_html_parser_destroy(parser);
-
-        if (document == nullptr) return std::nullopt;
-        return document;
-    }
     bool worker::normalize_url(http::url &url, const std::optional<std::string> &owner_host) const {
-        if (url.text.size() < 3 && !owner_host) return false;
-        if_debug_normalize_print("info", "normalize url", url.text);
+        if (url.text.size() < 3 && !owner_host) {
+            return false;
+        }
+
         if (str::starts_with(url.text, "//")) {
-            if_debug_normalize_print("info", "url starts with //", url.text);
+            //insert protocol in url
             url.text.insert(0, "http:");
             url.parse();
         }
@@ -62,8 +65,8 @@ namespace librengine::crawler {
             http::url owner_url(str::to_lower(*owner_host));
             owner_url.parse();
 
-            owner_url.set(CURLUPART_QUERY, "");
-            owner_url.set(CURLUPART_FRAGMENT, "");
+            owner_url.set(CURLUPART_QUERY, "");    //?param=value
+            owner_url.set(CURLUPART_FRAGMENT, ""); //#id
 
             auto f_c = str::get_first_char(url.text);
 
@@ -79,9 +82,10 @@ namespace librengine::crawler {
                     else str::remove_last_char(owner_url.text);
                 }
             } else {
-                owner_url.set(CURLUPART_PATH, "");
+                owner_url.set(CURLUPART_PATH, ""); // /a/b/c
             }
 
+            owner_url.compute_text();
             owner_url.parse();
 
             if (str::get_first_char(url.text) == '/' && str::get_last_char(owner_url.text) == '/') {
@@ -89,17 +93,18 @@ namespace librengine::crawler {
             }
 
             url.text.insert(0, owner_url.text);
+            url.compute_text();
             url.parse();
         }
 
         if (this->current_config.is_http_to_https) {
             if (url.scheme && url.scheme == "http") {
-                url.set(CURLUPART_SCHEME, "https");
+                url.set(CURLUPART_SCHEME, "https"); //protocol
             }
         }
 
-        url.set(CURLUPART_QUERY, "");
-        url.set(CURLUPART_FRAGMENT, "");
+        url.set(CURLUPART_QUERY, "");    //?param=value
+        url.set(CURLUPART_FRAGMENT, ""); //#id
 
         while(true) {
             char c = str::get_last_char(url.text);
@@ -111,286 +116,221 @@ namespace librengine::crawler {
             }
         }
 
+        url.compute_text();
         url.parse();
-        if_debug_normalize_print("info", "normalized url", url.text);
         return true;
-    }
-
-    std::string worker::compute_search_website_json(const std::string &field, const std::string &phrase) const {
-        nlohmann::json json;
-        const auto now = compute_time();
-
-        json["query"]["bool"]["must"][0]["match"][field] = phrase;
-        json["query"]["bool"]["must"][1]["range"]["date"]["gte"] = now - this->current_config.update_time_site_info_s_after;
-        json["query"]["bool"]["must"][1]["range"]["date"]["lte"] = now;
-        json["_source"] = false;
-
-        return json.dump();
-    }
-    std::string worker::compute_search_robots_txt_json(const std::string &field, const std::string &phrase) const {
-        nlohmann::json json;
-        const auto now = compute_time();
-
-        json["query"]["bool"]["must"][0]["match"][field] = phrase;
-        json["query"]["bool"]["must"][1]["range"]["date"]["gte"] = now - this->current_config.update_time_site_info_s_after;
-        json["query"]["bool"]["must"][1]["range"]["date"]["lte"] = now;
-
-        return json.dump();
-    }
-
-    std::optional<std::string> worker::compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &desc) {
-        nlohmann::json json;
-
-        json["title"] = title;
-        json["url"] = url;
-        json["host"] = host;
-        json["desc"] = desc;
-        json["date"] = compute_time();
-        json["rating"] = 100;
-
-        try {
-            return json.dump();
-        } catch (const nlohmann::detail::type_error &e) { //crawler trap
-            return std::nullopt;
-        }
-    }
-    std::optional<std::string> worker::compute_robots_txt_json(const std::string &body, const std::string &host) {
-        nlohmann::json json;
-
-        json["body"] = body;
-        json["host"] = host;
-        json["date"] = compute_time();
-
-        try {
-            return json.dump();
-        } catch (const nlohmann::detail::type_error &e) { //crawler trap
-            return std::nullopt;
-        }
-    }
-
-    std::optional<std::string> worker::get_added_robots_txt(const std::string &host) {
-        const auto path = opensearch::client::path_options("robots_txt/_search");
-        const auto type = opensearch::client::request_type::POST;
-        const auto json = compute_search_robots_txt_json("host", host);
-        const auto search_response = this->opensearch_client.custom_request(path, type, json);
-
-        if (!search_response) return std::nullopt;
-        nlohmann::json result_json = nlohmann::json::parse(*search_response);
-        const auto value = result_json["hits"]["total"]["value"];
-
-        if (value.is_null()) return std::nullopt;
-        if (value > 0) {
-            const auto body = result_json["hits"]["hits"][0]["_source"]["body"];
-            if (body.is_null()) return std::nullopt;
-
-            return body;
-        }
-
-        return std::nullopt;
-    }
-    size_t worker::hints_count_added(const std::string &field, const std::string &url) {
-        const auto path = opensearch::client::path_options("website/_search");
-        const auto type = opensearch::client::request_type::POST;
-        const auto json = compute_search_website_json(field, url);
-        const auto search_response = this->opensearch_client.custom_request(path, type, json);
-
-        if (!search_response) return false;
-        nlohmann::json result_json = nlohmann::json::parse(*search_response);
-        const auto value = result_json["hits"]["total"]["value"];
-
-        if (value.is_null()) return 0;
-        if (value > 0) {
-            return value;
-        }
-
-        return 0;
-    }
-
-    http::request::result_s worker::site(const http::url &url) {
-        http::request request(url.text);
-
-        request.options.timeout_s = this->current_config.load_page_timeout_s;
-        request.options.user_agent = this->current_config.user_agent;
-        request.options.proxy = this->current_config.proxy;
-        request.perform();
-
-        return request.result;
-    }
-    bool worker::is_allowed_in_robots(const std::string &body, const std::string &url) const {
-        Rep::Robots robots = Rep::Robots(body);
-        return robots.allowed(url, this->current_config.user_agent);
-    }
-    std::optional<std::string> worker::get_robots_txt(const http::url &url) {
-        http::url url_cp(url.text);
-        url_cp.set(CURLUPART_PATH, "/robots.txt");
-        url_cp.parse();
-
-        http::request request(url_cp.text);
-        request.options.timeout_s = this->current_config.load_page_timeout_s;
-        request.options.user_agent = this->current_config.user_agent;
-        request.options.proxy = this->current_config.proxy;
-        request.perform();
-
-        if (request.result.code != 200) return std::nullopt;
-        return request.result.response;
-    }
-
-    std::string worker::get_desc(lxb_html_document *document) {
-        auto collection = lxb_dom_collection_make(&(document)->dom_document, 16);
-        lxb_dom_elements_by_attr(lxb_dom_interface_element(document->head), collection, std_string_to_lxb("name"), 4, std_string_to_lxb("description"), 11, false);
-
-        const auto c_length = collection->array.length;
-        std::string desc;
-
-        for (size_t i = 0; i < c_length; i++) {
-            auto element = lxb_dom_collection_element(collection, i);
-            const auto content = lxb_dom_element_get_attribute(element, std_string_to_lxb("content"), 7, nullptr);
-
-            if (content != nullptr) {
-                if (desc.length() > 500) break;
-                desc.append(lxb_string_to_std(content).value_or(""));
-                desc.append("\n");
-            }
-        }
-
-        if (c_length > 0) lxb_dom_collection_destroy(collection, true);
-        return desc;
-    }
-    std::string worker::compute_desc(const std::string &tag_name, lxb_html_document *document) {
-        auto collection = lxb_dom_collection_make(&(document)->dom_document, 16);
-        lxb_dom_elements_by_tag_name(lxb_dom_interface_element(document->body), collection, std_string_to_lxb(tag_name), tag_name.length());
-
-        const auto c_length = collection->array.length;
-        std::string desc;
-
-        for (size_t i = 0; i < c_length; i++) {
-            if (desc.length() > 500) break;
-
-            auto element = lxb_dom_collection_element(collection, i);
-            const auto text = lxb_string_to_std(lxb_dom_node_text_content(lxb_dom_interface_node(element), nullptr)).value_or("");
-            desc.append(text);
-            desc.append("\n");
-        }
-
-        if (c_length > 0) lxb_dom_collection_destroy(collection, true);
-        return desc;
     }
 
     worker::worker(config::crawler config, opensearch::client opensearch_client) : current_config(std::move(config)), opensearch_client(std::move(opensearch_client)) {
         this->is_work = true;
     }
 
-
     worker::result worker::main_thread(const std::string &site_url, int &deep, const std::optional<http::url> &owner_url) {
-        if (!is_work) return result::work_false;
+        if (!is_work) {
+            return result::work_false;
+        }
 
         http::url url(str::to_lower(site_url));
         url.parse();
 
         std::string owner_url_text = (owner_url) ? owner_url->text : "";
 
-        if (!normalize_url(url, owner_url_text)) { if_debug_print("error", "normalize url", url.text); return result::error; }
-        if (url.text == owner_url_text) { if_debug_print("error", "url == owner", url.text); return result::already_added; }
-        if (!url.host) { if_debug_print("error", "url host == null", url.text); return result::null_or_limit; }
-        if (current_config.is_one_site && owner_url && url.host != owner_url->host) { return result::already_added; }
-        if (hints_count_added("url", url.text) > 0) { if_debug_print("error", "already added", url.text); return result::already_added; }
+        if (!normalize_url(url, owner_url_text)) {
+            if_debug_print(debug_type::error, "normalize url", url.text);
+            return result::error;
+        }
+        if (!url.host) {
+            if_debug_print(debug_type::error, "host == null", url.text);
+            return result::null_or_limit;
+        }
+        if (url.text == owner_url_text) {
+            if_debug_print(debug_type::error, "url == owner", url.text);
+            return result::already_added;
+        }
+        if (current_config.is_one_site && owner_url && url.host != owner_url->host) {
+            return result::already_added;
+        }
+        if (helper::hints_count_added("url", url.text, current_config, opensearch_client) > 0) {
+            if_debug_print(debug_type::error, "already added", url.text);
+            return result::already_added;
+        }
 
-        size_t pages_count = hints_count_added("host", *url.host);
-        if (pages_count >= this->current_config.max_pages_site) { if_debug_print("error", "pages count >= limit", url.text);  return result::pages_limit; }
+        size_t pages_count = helper::hints_count_added("host", *url.host, current_config, opensearch_client);
+
+        if (pages_count >= this->current_config.max_pages_site) {
+            if_debug_print(debug_type::error, "pages count >= limit", url.text);
+            return result::pages_limit;
+        }
 
         if (this->current_config.is_check_robots_txt) {
-            auto robots_txt_body = get_added_robots_txt(*url.host).value_or("");
-            bool is_check = true;
+            auto robots_txt_body = helper::get_added_robots_txt(*url.host, current_config, opensearch_client).value_or("");
+            bool is_checked = true;
 
             if (robots_txt_body.empty()) {
-                robots_txt_body = get_robots_txt(url).value_or("");
+                robots_txt_body = helper::get_robots_txt(url, current_config).value_or("");
                 auto robots_txt_body_length = robots_txt_body.length();
 
                 if (robots_txt_body_length > 1 && robots_txt_body_length < this->current_config.max_robots_txt_symbols) {
-                    const auto json = compute_robots_txt_json(robots_txt_body, *url.host);
-                    if (!json) return result::null_or_limit;
+                    const auto json = helper::compute_robots_txt_json(robots_txt_body, *url.host);
+
+                    if (!json) {
+                        return result::null_or_limit;
+                    }
 
                     const auto path = opensearch::client::path_options("robots_txt/_doc");
                     const auto type = opensearch::client::request_type::POST;
 
+                    //add a robots_txt to the opensearch
                     opensearch_client.custom_request(path, type, json);
                 } else {
-                    is_check = false;
+                    is_checked = false;
                 }
             }
 
-            if (is_check && !is_allowed_in_robots(robots_txt_body, url.text)) return result::disallowed_robots;
+            if (is_checked && !helper::is_allowed_in_robots(robots_txt_body, url.text, current_config)) {
+                return result::disallowed_robots;
+            }
         }
 
-        auto request_result = site(url);
-        auto response = (request_result.code == 200) ? request_result.response : std::nullopt;
+        auto request_result = helper::site(url, current_config);
+        auto response = request_result.response;
         auto response_length = response->length();
 
-        if_debug_print("info", "response length = " + str::to_string(response_length), url.text);
-        if_debug_print("info", "curl code = " + str::to_string(request_result.curl_code), url.text);
+        if_debug_print(debug_type::info, "response length = " + str::to_string(response_length), url.text);
+        if_debug_print(debug_type::info, "response code = " + str::to_string(request_result.code), url.text);
+        if_debug_print(debug_type::info, "curl code = " + str::to_string(request_result.curl_code), url.text);
 
-        if (!response || response_length < 1 || response_length >= this->current_config.max_page_symbols)
-        { if_debug_print("error", "response = null || length < 1 || >= limit", url.text); return result::null_or_limit; }
-
-        auto document = parse_html(*response);
-        if (!document) return result::null_or_limit;
-        auto body = lxb_dom_interface_node((*document)->body);
-        if (body == nullptr) return result::null_or_limit;
-
-        const std::string title = lxb_string_to_std(lxb_html_document_title((*document), nullptr)).value_or("#ERR#");
-        //const std::string content = lxb_string_to_std(lxb_dom_node_text_content(body, nullptr)).value_or("");
-        std::string desc = get_desc(*document); //by meta tag
-
-        if (desc.empty()) {
-            compute_desc("h1", *document);
-            desc.append(compute_desc("p", *document));
+        if (request_result.code != 200) {
+            if_debug_print(debug_type::error, "code != 200", url.text);
+            return result::null_or_limit;
+        }
+        if (!response || response_length < 1 || response_length >= this->current_config.max_page_symbols) {
+            if_debug_print(debug_type::error, "response = null || length < 1 || >= limit", url.text);
+            return result::null_or_limit;
         }
 
-        const auto json = compute_website_json(title, url.text, *url.host, desc);
-        if (!json) return result::null_or_limit;
+        auto document = helper::parse_html(*response);
+
+        if (!document) {
+            return result::null_or_limit;
+        }
+
+        auto body = lxb_dom_interface_node((*document)->body);
+
+        if (body == nullptr) {
+            return result::null_or_limit;
+        }
+
+        const std::string title = helper::lxb_string_to_std(lxb_html_document_title((*document), nullptr)).value_or("");
+        //const std::string content = lxb_string_to_std(lxb_dom_node_text_content(body, nullptr)).value_or("");
+        std::string desc = helper::get_desc(*document); //by meta tag
+
+        bool has_ads = false;
+        bool has_analytics = false;
+
+        const std::vector<std::string> detect_ads_strings = {
+                "g.doubleclick.net ", "adservice.google.com",
+                "amazon-adsystem.com/aax2/apstag.js", "yandex.ru/ads/system/context.js",
+                "\"adServer\":\"", "googletag.pubads", "adsbygoogle.js",
+                "googlesyndication.com/"
+        };
+        const std::vector<std::string> detect_analytics_strings = {
+                "googletagmanager.com/", "yandex.ru/metrika/",
+                "google-analytics.com/", "GoogleAnalyticsObject",
+                "google-analytics.js",   "googletag",
+                "googletagservices.com/"
+        };
+
+        for (const auto &s : detect_ads_strings) {
+            if (str::contains(*response, s, false)) {
+                has_ads = true;
+                break;
+            }
+        }
+        for (const auto &s : detect_analytics_strings) {
+            if (str::contains(*response, s, false)) {
+                has_analytics = true;
+                break;
+            }
+        }
+
+        if (desc.empty()) {
+            //compute desc from h1 tags
+            desc.append(helper::compute_desc("h1", *document));
+        }
+        if (title.empty() && desc.empty()) {
+            if_debug_print(debug_type::error, "title & desc are empty", url.text);
+            return result::null_or_limit;
+        }
+
+        const auto json = helper::compute_website_json(title, url.text, *url.host, desc, has_ads, has_analytics);
+
+        if (!json) {
+            return result::null_or_limit;
+        }
 
         const auto path = opensearch::client::path_options("website/_doc");
         const auto type = opensearch::client::request_type::POST;
 
+        //add a website to the opensearch
         opensearch_client.custom_request(path, type, json);
-        std::cout << "[" << url.text << "]" << std::endl; //TODO: print
+
+        //print added url
+        std::cout << YELLOW << "[" << url.text << "]" << std::endl;
 
         if (deep < this->current_config.max_recursive_deep) {
             auto collection = lxb_dom_collection_make(&(*document)->dom_document, 16);
-            lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, std_string_to_lxb("a"), 1);
+            lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, helper::std_string_to_lxb("a"), 1);
             const auto a_length = collection->array.length;
             std::vector<std::string> pages_limit_hosts;
             ++deep;
 
             for (size_t i = 0; i < a_length; i++) {
                 auto element = lxb_dom_collection_element(collection, i);
-                const auto href_value = lxb_string_to_std(lxb_dom_element_get_attribute(element, std_string_to_lxb("href"), 4, nullptr));
+                const auto href_value = helper::lxb_string_to_std(lxb_dom_element_get_attribute(element, helper::std_string_to_lxb("href"), 4, nullptr));
 
-                if (!href_value && *href_value == url.text && str::starts_with(*href_value, "#")) continue;
+                if (!href_value && *href_value == url.text && str::starts_with(*href_value, "#")) {
+                    //skip fragment links
+                    continue;
+                }
 
                 http::url href_url(*href_value);
                 href_url.parse();
 
-                if (!href_url.host || str::contains(pages_limit_hosts, *href_url.host, true)) continue;
+                if (!href_url.host || str::contains(pages_limit_hosts, *href_url.host, true)) {
+                    //skip already added
+                    continue;
+                }
 
-                std::this_thread::sleep_for(std::chrono::seconds(this->current_config.delay_time_s));
                 result result;
 
-                if (!str::starts_with(*href_value, "http")) result = main_thread(href_url.text, deep, url);
-                else {
-                    if (current_config.is_one_site && href_url.host != url.host) continue;
+                if (!str::starts_with(*href_value, "http")) {
+                    result = main_thread(href_url.text, deep, url);
+                } else {
+                    if (current_config.is_one_site && href_url.host != url.host) {
+                        //skip other sites
+                        continue;
+                    }
+
                     result = main_thread(*href_value, deep);
                 }
 
-                if (result == result::work_false)  break;
-                if (result == result::pages_limit) pages_limit_hosts.push_back(*href_url.host);
-                if (result == result::added || result == result::disallowed_robots) {
+                if (result == result::work_false) {
+                    //exit from loop
+                    break;
+                } else if (result == result::pages_limit) {
+                    pages_limit_hosts.push_back(*href_url.host);
+                } else if (result == result::added || result == result::disallowed_robots) {
+                    //delay
                     std::this_thread::sleep_for(std::chrono::seconds(this->current_config.delay_time_s));
                 }
             }
 
             --deep;
-            if (a_length > 0) lxb_dom_collection_destroy(collection, true);
+
+            if (a_length > 0) {
+                lxb_dom_collection_destroy(collection, true);
+            }
         }
 
         lxb_html_document_destroy(*document);

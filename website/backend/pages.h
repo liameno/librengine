@@ -31,6 +31,8 @@ namespace backend::pages {
         std::string url;
         std::string desc;
         size_t rating{0};
+        bool has_ads;
+        bool has_analytics;
     };
 
     void set_variables(std::string &page_src) {
@@ -108,42 +110,18 @@ namespace backend::pages {
 
         const auto response = client.custom_request(path, type, json.dump());
         nlohmann::json result_json = nlohmann::json::parse(*response);
-        const auto value = result_json["hits"]["total"]["value"];
-
-        if (value.is_null()) return std::nullopt;
-        if (value < 0) return std::nullopt;
 
         const auto body = result_json["hits"]["hits"];
-        if (body.is_null()) return std::nullopt;
+        if (body.is_null() || body.empty()) return std::nullopt;
+
+        size_t value = body.size();
 
         std::vector<search_result> results;
         results.reserve(value);
 
-        /*auto first_hit = body[0];
-        if(str::split(q, "+").size() == 1) {
-            const auto path = opensearch::client::path_options("website/_search");
-            const auto type = opensearch::client::request_type::POST;
-
-            nlohmann::json json;
-
-            json["query"]["query_string"]["fields"] = {"url"};
-            json["query"]["query_string"]["query"] = "https://" + first_hit["_source"]["host"].get<std::string>();
-            json["size"] = 10;
-            json["from"] = s;
-
-            const auto response = client.custom_request(path, type, json.dump());
-            nlohmann::json result_json = nlohmann::json::parse(*response);
-            const auto value = result_json["hits"]["total"]["value"];
-
-            if (value.is_null()) return std::nullopt;
-            if (value < 0) return std::nullopt;
-        }*/
-
         for (int i = 0; i < value; ++i) {
             search_result result;
             auto hit = body[i];
-
-            //if_debug_print("info", "score = " + hit["_score"].get<std::string>(), hit["_source"]["title"]);
 
             try {
                 result.id = hit["_id"];
@@ -151,6 +129,8 @@ namespace backend::pages {
                 result.url = hit["_source"]["url"];
                 result.desc = hit["_source"]["desc"];
                 result.rating = hit["_source"]["rating"];
+                result.has_ads = hit["_source"]["has_ads"];
+                result.has_analytics = hit["_source"]["has_analytics"];
             } catch (const nlohmann::json::exception &e) {
                 continue;
             }
@@ -209,15 +189,15 @@ namespace backend::pages {
 
         const std::string center_result_src_format = "<div class=\"center_result\">"
                                                      "<div class=\"content\">"
-                                                     "<a class=\"title\" href=\"{1}\">{0}</a>"
+                                                     "<a class=\"title\" href=\"{1}\">{0}<span><i class=\"fa fa-ad info_icon info_{6}\"></i><i class=\"fa fa-user-secret info_icon info_{7}\"></i></span></a>"
                                                      "<div class=\"url\">{1}</div>"
                                                      "<div class=\"description\">{2}</div>"
                                                      "</div>"
                                                      "<div class=\"rating_container\">"
                                                      "<div class=\"rating\">"
                                                      "<div class=\"counter\">{3}/200</div>"
-                                                     "<a class=\"plus rating_button\" href=\"/api/plus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-up\"></i></a>"
-                                                     "<a class=\"minus rating_button\" href=\"/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
+                                                     "<a class=\"plus rating_button\" href=\"{5}/api/plus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-up\"></i></a>"
+                                                     "<a class=\"minus rating_button\" href=\"{5}f/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
                                                      "</div>"
                                                      "</div>"
                                                      "</div>";
@@ -252,9 +232,11 @@ namespace backend::pages {
                     const auto url = result["url"].get<std::string>();
                     const auto desc = result["desc"].get<std::string>();
                     const auto rating = result["rating"].get<size_t>();
+                    const auto has_ads = result["has_ads"].get<bool>();
+                    const auto has_analytics = result["has_analytics"].get<bool>();
                     const auto id = result["id"].get<std::string>();
 
-                    center_results_src.append(str::format(center_result_src_format, title, url, desc, rating, id, node.url));
+                    center_results_src.append(str::format(center_result_src_format, title, url, desc, rating, id, node.url, (has_ads) ? "bad" : "good", (has_analytics) ? "bad" : "good"));
                 }
 
                 break;
@@ -354,6 +336,8 @@ namespace backend::pages {
                 page_src["results"][i]["desc"] = desc;
                 page_src["results"][i]["rating"] = result.rating;
                 page_src["results"][i]["id"] = result.id;
+                page_src["results"][i]["has_ads"] = result.has_ads;
+                page_src["results"][i]["has_analytics"] = result.has_analytics;
             }
 
             page_src["count"] = search_results->size();
