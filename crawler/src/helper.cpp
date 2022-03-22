@@ -1,31 +1,31 @@
-#include "crawler/helper.h"
+#include "../include/helper.h"
 
 #include <lexbor/html/html.h>
 #include <optional>
 #include <thread>
-#include <utility>
 
-#include "config.h"
-#include "http.h"
-#include "str.h"
-#include "opensearch.h"
-#include "json.hpp"
-#include "../../third_party/rep-cpp/robots.h"
+#include <librengine/config.h>
+#include <librengine/http.h>
+#include <librengine/opensearch.h>
+#include <librengine/json.hpp>
+#include "../third_party/rep-cpp/robots.h"
 
-namespace librengine::crawler {
-    size_t helper::compute_time() {
+namespace helper {
+    using namespace librengine;
+
+    size_t compute_time() {
         return time(nullptr);
     }
 
-    std::optional<std::string> helper::lxb_string_to_std(const lxb_char_t *s) {
+    std::optional<std::string> lxb_string_to_std(const lxb_char_t *s) {
         if (s == nullptr) return std::nullopt;
         return reinterpret_cast<const char *>(s);
     }
-    lxb_char_t *helper::std_string_to_lxb(const std::string &s) {
+    lxb_char_t *std_string_to_lxb(const std::string &s) {
         return (lxb_char_t *) s.c_str();
     }
 
-    std::optional<lxb_html_document*> helper::parse_html(const std::string &response) {
+    std::optional<lxb_html_document*> parse_html(const std::string &response) {
         auto parser = lxb_html_parser_create();
         auto status = lxb_html_parser_init(parser);
 
@@ -37,7 +37,7 @@ namespace librengine::crawler {
         return document;
     }
 
-    std::string helper::compute_search_website_json(const std::string &field, const std::string &phrase, const config::crawler &current_config) {
+    std::string compute_search_website_json(const std::string &field, const std::string &phrase, const config::crawler &current_config) {
         nlohmann::json json;
         const auto now = compute_time();
 
@@ -48,7 +48,7 @@ namespace librengine::crawler {
 
         return json.dump();
     }
-    std::string helper::compute_search_robots_txt_json(const std::string &field, const std::string &phrase, const config::crawler &current_config) {
+    std::string compute_search_robots_txt_json(const std::string &field, const std::string &phrase, const config::crawler &current_config) {
         nlohmann::json json;
         const auto now = compute_time();
 
@@ -59,7 +59,7 @@ namespace librengine::crawler {
         return json.dump();
     }
 
-    std::optional<std::string> helper::compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &desc, const bool &has_ads, const bool &has_analytics) {
+    std::optional<std::string> compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &desc, const bool &has_ads, const bool &has_analytics) {
         nlohmann::json json;
 
         json["title"] = title;
@@ -77,7 +77,7 @@ namespace librengine::crawler {
             return std::nullopt;
         }
     }
-    std::optional<std::string> helper::compute_robots_txt_json(const std::string &body, const std::string &host) {
+    std::optional<std::string> compute_robots_txt_json(const std::string &body, const std::string &host) {
         nlohmann::json json;
 
         json["body"] = body;
@@ -91,9 +91,10 @@ namespace librengine::crawler {
         }
     }
 
-    std::string helper::get_desc(lxb_html_document *document) {
+    std::string get_desc(const std::string &attribute_name, const std::string &attribute_value, lxb_html_document *document) {
         auto collection = lxb_dom_collection_make(&(document)->dom_document, 16);
-        lxb_dom_elements_by_attr(lxb_dom_interface_element(document->head), collection, std_string_to_lxb("name"), 4, std_string_to_lxb("description"), 11, false);
+        lxb_dom_elements_by_attr(lxb_dom_interface_element(document->head), collection, std_string_to_lxb(attribute_name),
+                                 attribute_name.length(), std_string_to_lxb(attribute_value), attribute_value.length(), true);
 
         const auto c_length = collection->array.length;
         std::string desc;
@@ -112,7 +113,7 @@ namespace librengine::crawler {
         if (c_length > 0) lxb_dom_collection_destroy(collection, true);
         return desc;
     }
-    std::string helper::compute_desc(const std::string &tag_name, lxb_html_document *document) {
+    std::string compute_desc(const std::string &tag_name, lxb_html_document *document) {
         auto collection = lxb_dom_collection_make(&(document)->dom_document, 16);
         lxb_dom_elements_by_tag_name(lxb_dom_interface_element(document->body), collection, std_string_to_lxb(tag_name), tag_name.length());
 
@@ -131,12 +132,12 @@ namespace librengine::crawler {
         if (c_length > 0) lxb_dom_collection_destroy(collection, true);
         return desc;
     }
-    
-    
-    std::optional<std::string> helper::get_added_robots_txt(const std::string &host, const config::crawler &current_config, opensearch::client &opensearch_client) {
+
+
+    std::optional<std::string> get_added_robots_txt(const std::string &host, const config::crawler &current_config, opensearch::client &opensearch_client) {
         const auto path = opensearch::client::path_options("robots_txt/_search");
         const auto type = opensearch::client::request_type::POST;
-        const auto json = helper::compute_search_robots_txt_json("host", host, current_config);
+        const auto json = compute_search_robots_txt_json("host", host, current_config);
         const auto search_response = opensearch_client.custom_request(path, type, json);
 
         if (!search_response) return std::nullopt;
@@ -153,10 +154,10 @@ namespace librengine::crawler {
 
         return std::nullopt;
     }
-    size_t helper::hints_count_added(const std::string &field, const std::string &url, const config::crawler &current_config, opensearch::client &opensearch_client) {
+    size_t hints_count_added(const std::string &field, const std::string &url, const config::crawler &current_config, opensearch::client &opensearch_client) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
-        const auto json = helper::compute_search_website_json(field, url, current_config);
+        const auto json = compute_search_website_json(field, url, current_config);
         const auto search_response = opensearch_client.custom_request(path, type, json);
 
         if (!search_response) return false;
@@ -171,7 +172,7 @@ namespace librengine::crawler {
         return 0;
     }
 
-    http::request::result_s helper::site(const http::url &url, const config::crawler &current_config) {
+    http::request::result_s site(const http::url &url, const config::crawler &current_config) {
         http::request request(url.text);
 
         request.options.timeout_s = current_config.load_page_timeout_s;
@@ -181,11 +182,11 @@ namespace librengine::crawler {
 
         return request.result;
     }
-    bool helper::is_allowed_in_robots(const std::string &body, const std::string &url, const config::crawler &current_config) {
+    bool is_allowed_in_robots(const std::string &body, const std::string &url, const config::crawler &current_config) {
         Rep::Robots robots = Rep::Robots(body);
         return robots.allowed(url, current_config.user_agent);
     }
-    std::optional<std::string> helper::get_robots_txt(const http::url &url, const config::crawler &current_config) {
+    std::optional<std::string> get_robots_txt(const http::url &url, const config::crawler &current_config) {
         http::url url_cp(url.text);
         url_cp.set(CURLUPART_PATH, "/robots.txt");
         url_cp.parse();

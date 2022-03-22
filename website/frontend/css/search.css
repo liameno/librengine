@@ -5,6 +5,7 @@
 .rating_container {
     display: flex;
     justify-content: right;
+    width: 100%;
 }
 
 .top_container {

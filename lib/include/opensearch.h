@@ -1,5 +1,5 @@
-#ifndef ELASTIC_SEARCH_H
-#define ELASTIC_SEARCH_H
+#ifndef OPENSEARCH_H
+#define OPENSEARCH_H
 
 #include <string>
 #include <memory>

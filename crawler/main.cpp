@@ -1,18 +1,19 @@
 #include <librengine/config.h>
-#include <librengine/crawler/worker.h>
 #include <librengine/str.h>
+#include <librengine/logger.h>
+
+#include "include/worker.h"
 
 using namespace librengine;
 
 void easy_start(const config::crawler &config) {
-    curl_global_init(CURL_GLOBAL_ALL);      //https://stackoverflow.com/questions/6087886
-    using namespace librengine;
+    curl_global_init(CURL_GLOBAL_ALL); //https://stackoverflow.com/questions/6087886
+
     int deep = 0;
+    auto w = std::make_shared<worker>(config, opensearch::client(config.opensearch_url));
+    w->main_thread(config.start_site_url, deep);
 
-    auto worker = std::make_shared<crawler::worker>(config, opensearch::client(config.opensearch_url));
-    worker->main_thread(config.start_site_url, deep);
-
-    curl_global_cleanup();                  //https://curl.se/libcurl/c/curl_global_cleanup.html
+    curl_global_cleanup(); //https://curl.se/libcurl/c/curl_global_cleanup.html
 }
 
 int main(int argc, char **argv) {
@@ -26,9 +27,9 @@ int main(int argc, char **argv) {
     config.load_from_file(argv[2]);
     std::string line = std::string(25, '=');
 
-    std::cout << line << "CFG" << line << std::endl
-              << config.to_str()  << std::endl
-              << line << "===" << line << std::endl;
+    std::cout   << logger::white << line << logger::green << "CFG" << logger::white << line << std::endl
+                << logger::reset << config.to_str()  << std::endl
+                << logger::white << line << "===" << logger::white << line << std::endl;
 
     easy_start(config);
 

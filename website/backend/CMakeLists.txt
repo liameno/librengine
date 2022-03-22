@@ -9,5 +9,5 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(CURL)
 find_package(Threads)
 
-add_executable(${PROJECT_NAME} main.cpp third_party/httplib.h)
+add_executable(${PROJECT_NAME} main.cpp third_party/httplib.h pages.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE /usr/lib/liblexbor.so curl Threads::Threads /usr/local/lib/liblibrengine.so)

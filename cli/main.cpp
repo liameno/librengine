@@ -1,6 +1,6 @@
 #include <librengine/config.h>
-#include <librengine/crawler/worker.h>
 #include <librengine/str.h>
+#include <librengine/logger.h>
 
 using namespace librengine;
 
@@ -125,7 +125,10 @@ int main(int argc, char **argv) {
     config.query = argv[1];
     config.start_index = std::stoi(argv[2]);
     config.load_from_file(argv[3]);
-    std::string line = std::string(25, '=');
+
+    std::cout   << logger::white << line << logger::green << "CFG" << logger::white << line << std::endl
+                << logger::reset << config.to_str()  << std::endl
+                << logger::white << line << "===" << logger::white << line << std::endl;
 
     return 0;
 }
