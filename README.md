@@ -79,11 +79,11 @@ cd website/backend/build
     //type://ip:port
     "proxy": "socks5://127.0.0.1:9050",
     "load_page_timeout_s": 10,
-    "update_time_site_info_s_after": 86400,
+    "update_time_site_info_s_after": 86400, //10 days
     "delay_time_s": 3, 
-    "max_recursive_deep": 3,
-    "max_pages_site": 3,
-    "max_page_symbols": 50000000,
+    "max_recursive_deep": 2,
+    "max_pages_site": 1,
+    "max_page_symbols": 50000000, //50mb
     "max_robots_txt_symbols": 3000,
     "is_one_site": false,
     "is_http_to_https": true,
@@ -100,9 +100,6 @@ cd website/backend/build
     "nodes": [ {
         "name": "This",
         "url": "http://127.0.0.1:8080"
-      }, {
-        "name": "2",
-        "url": "http://127.0.0.1:1356"
       }
     ]
   }
