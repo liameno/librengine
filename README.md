@@ -27,10 +27,11 @@ Private Opensource Web Search Engine
 - libcurl 	(https://github.com/curl/curl)
 - lexbor	(https://github.com/lexbor/lexbor)
 - opensearch	(https://www.opensearch.org/)
+- openssl 	(https://www.openssl.org/)
 
 Arch: 
 ```shell
-yay -S curl lexbor opensearch
+yay -S curl lexbor opensearch openssl
 ```
 Debian: 
 ```shell
@@ -40,7 +41,8 @@ tar -zxf opensearch-1.2.4-linux-x64.tar.gz && cd opensearch-1.2.4 &&
 ./opensearch-tar-install.sh &&
 git clone https://github.com/lexbor/lexbor && 
 cd lexbor &&
-cmake . && make && sudo make install
+cmake . && make && sudo make install &&
+sudo apt install libssl-dev
 ```
 ## Build
 ```shell
@@ -55,25 +57,25 @@ sh set_opensearch.sh
 ```
 #### Crawler
 ```shell
-cd crawler/build
 ./crawler https://www.gnu.org ../../config.json
 #[start_site] [config path]
 ```
 #### Backend
 ```shell
-cd website/backend/build
 ./backend ../../config.json
 #[config path]
 ```
 ## Config 
 ```json
+//proxy: type://ip:port
+//socks5://127.0.0.1:9050
+
 {
   "crawler": {
     "user_agent": "librengine",
     "opensearch_url": "http://localhost:9200",
-    //type://ip:port
     "proxy": "socks5://127.0.0.1:9050",
-    "load_page_timeout_s": 10,
+    "load_page_timeout_s": 20,
     "update_time_site_info_s_after": 86400, //10 days
     "delay_time_s": 3, 
     "max_recursive_deep": 2,
@@ -90,8 +92,7 @@ cd website/backend/build
   },
   "website": {
     "port": 8080,
-    //type://ip:port
-    "proxy": "",
+    "proxy": "socks5://127.0.0.1:9050",
     "nodes": [ {
         "name": "This",
         "url": "http://127.0.0.1:8080"
