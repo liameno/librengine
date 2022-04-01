@@ -42,7 +42,6 @@ namespace librengine::http {
         std::string result;
 
         if (full.empty()) return {};
-
         if (str::starts_with(full, "http") || str::starts_with(full, "socks")) return full;
 
         switch (type) {
@@ -153,6 +152,11 @@ namespace librengine::http {
         curl_url_set(current_curl_url, what, value.c_str(), 0);
     }
 
+    bool url::is_localhost() {
+        std::string h = host.value_or("");
+        return h == "127.0.0.1" || h == "0.0.0.0" || "localhost";
+    }
+
     request::request(std::string url, const std::optional<std::string> &data, const std::optional<std::string> &type, const bool &is_set_secure_headers)
     :url(std::move(url)) {
         this->data = data.value_or("");
@@ -171,17 +175,11 @@ namespace librengine::http {
     }
 
     curl_slist *request::headers_to_curl_struct(const std::shared_ptr<std::vector<header>> &headers) {
-        if (headers->empty()) {
-            return nullptr;
-        }
-
+        if (headers->empty()) return nullptr;
         struct curl_slist *curl_headers = nullptr;
 
         for (auto &header_: *headers) {
-            if (header_.value.empty()) {
-                continue;
-            }
-
+            if (header_.value.empty()) continue;
             curl_headers = curl_slist_append(curl_headers, header_.full.c_str());
         }
 

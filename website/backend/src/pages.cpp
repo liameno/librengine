@@ -1,4 +1,4 @@
-#include "pages.h"
+#include "../include/pages.h"
 
 #include <optional>
 #include <librengine/config.h>
@@ -11,8 +11,6 @@
 #include <cstring>
 #include <thread>
 
-#include "third_party/httplib.h"
-
 #define DEBUG true //TODO: FALSE
 
 void if_debug_print(const logger::type &type, const std::string &text, const std::string &ident) {
@@ -21,15 +19,34 @@ void if_debug_print(const logger::type &type, const std::string &text, const std
 #endif
 }
 
-namespace backend::pages {
-    using namespace librengine;
+namespace backend {
+    pages::pages(const config::website &config, opensearch::client &client) {
+        this->rsa = encryption::rsa();
+        this->config = config;
+        this->client = client;
 
-    void set_variables(std::string &page_src) {
+        this->rsa.generate_keys(1024);
+    }
+    void pages::init() {
+        for (const auto &node : config.nodes) {
+            http::request request_(node.url + "/api/get_rsa_public_key");
+            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.proxy;
+            request_.perform();
+
+            rsa_public_keys.insert({node.url, request_.result.response.value_or("")});
+        }
+    }
+
+    void pages::set_variables(std::string &page_src) {
+        const std::string noscript_src = R"(<noscript><span class="noscript">Encryption doesn't work without js</span></noscript>)";
         const std::string header_src = R"(<li><a href="/home">Home</a></li><li><a href="/node/info">Node Info</a></li><li><a href="https://github.com/liameno/librengine">Github</a></li>)";
+
+        str::replace_ref(page_src, "{RSA_PUBLIC_KEY}", rsa.get_public_key_buffer());
+        str::replace_ref(page_src, "{NOSCRIPT_CONTENT}", noscript_src);
         str::replace_ref(page_src, "{HEADER_CONTENT}", header_src);
     }
 
-    void update(const std::string &id, const std::string &field, const size_t &value, opensearch::client &client) {
+    void pages::update(const std::string &id, const std::string &field, const size_t &value) {
         const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
         const auto type = opensearch::client::request_type::POST;
 
@@ -38,7 +55,7 @@ namespace backend::pages {
 
         const auto response = client.custom_request(path, type, json.dump());
     }
-    void update(const std::string &id, const std::string &field, const std::string &value, opensearch::client &client) {
+    void pages::update(const std::string &id, const std::string &field, const std::string &value) {
         const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
         const auto type = opensearch::client::request_type::POST;
 
@@ -47,7 +64,7 @@ namespace backend::pages {
 
         const auto response = client.custom_request(path, type, json.dump());
     }
-    size_t get_number_field_value(const std::string &id, const std::string &field, opensearch::client &client) {
+    size_t pages::get_number_field_value(const std::string &id, const std::string &field) {
         const auto path = opensearch::client::path_options("website/_doc/" + id);
         const auto type = opensearch::client::request_type::GET;
 
@@ -60,7 +77,7 @@ namespace backend::pages {
 
         return 0;
     }
-    /*size_t get_last_added_website_date(opensearch::client &client) {
+    /*size_t pages::get_last_added_website_date(opensearch::client &client) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
 
@@ -86,7 +103,7 @@ namespace backend::pages {
 
         return current_date - hit_date;
     }*/
-    std::optional<std::vector<search_result>> search(const std::string &q, const size_t &s, opensearch::client &client) {
+    std::optional<std::vector<pages::search_result>> pages::search(const std::string &q, const size_t &s) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
 
@@ -129,7 +146,7 @@ namespace backend::pages {
 
         return results;
     }
-    size_t get_field_count(const std::string &field, opensearch::client &client) {
+    size_t pages::get_field_count(const std::string &field) {
         const auto path = opensearch::client::path_options("website/_search");
         const auto type = opensearch::client::request_type::POST;
 
@@ -147,35 +164,22 @@ namespace backend::pages {
         return (size_t)value + 1;
     }
 
-    void home(const httplib::Request &request, httplib::Response &response, const config::website &config) {
+    void pages::home(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../../frontend/src/index.html");
         const std::string query = request.get_param_value("q");
-        const std::string checkbox_src_format = "<span>"
-                                                "<input class=\"checkbox\" id=\"{0}\" name=\"{0}\" type=\"checkbox\" checked=\"checked\">"
-                                                "<label for=\"{0}\"><span>{0} [{1}]</span></label>"
-                                                "</span>";
-        std::string checkboxes_src;
-
-        for (const auto &node : config.nodes) {
-            checkboxes_src.append(str::format(checkbox_src_format, node.name, node.url));
-        }
-
         str::replace_ref(page_src, "{QUERY}", query);
-        str::replace_ref(page_src, "{CHECKBOXES}", checkboxes_src);
 
         set_variables(page_src);
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
-    void search(const httplib::Request &request, httplib::Response &response, opensearch::client &client, const config::website &config) {
+    void pages::search(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../../frontend/src/search.html");
-        const std::string query = request.get_param_value("q");
-        auto s_ = request.get_param_value("s");
+        std::string query = request.get_param_value("q");
+        std::string e_ = request.get_param_value("e");
+        std::string ek_ = request.get_param_value("ek");
+        const std::string s_ = request.get_param_value("s");
         const size_t start_index = (!s_.empty()) ? std::stoi(s_) : 0;
-
-        if_debug_print(logger::type::info, "q = " + query, request.path);
-        if_debug_print(logger::type::info, "s = " + s_, request.path);
-
         const std::string center_result_src_format = "<div class=\"center_result\">"
                                                      "<div class=\"content\">"
                                                      "<a class=\"title\" href=\"{1}\">{0}<span><i class=\"fa fa-ad info_icon info_{6}\"></i><i class=\"fa fa-user-secret info_icon info_{7}\"></i></span></a>"
@@ -186,62 +190,124 @@ namespace backend::pages {
                                                      "<div class=\"rating\">"
                                                      "<div class=\"counter\">{3}/200</div>"
                                                      "<a class=\"plus rating_button\" href=\"{5}/api/plus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-up\"></i></a>"
-                                                     "<a class=\"minus rating_button\" href=\"{5}f/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
+                                                     "<a class=\"minus rating_button\" href=\"{5}/api/minus_rating?id={4}&redirect=1\"><i class=\"fa fa-arrow-down\"></i></a>"
                                                      "</div>"
                                                      "</div>"
                                                      "</div>";
-        const std::string search_param_src_format = R"(<input name="{0}" type="hidden" value="{1}">)";
-        std::string center_results_src;
-        std::string params_s = "?q=" + query + "&s=" + s_;
-        std::string search_param_inputs;
 
-        for (const auto &param : request.params) {
-            if (param.first == "q" && param.first == "s") {
-                continue;
+        if_debug_print(logger::type::info, "query = " + query, request.path);
+
+        if (e_ == "1") {
+            query = rsa.easy_private_decrypt(query);
+
+            if (query.empty()) {
+                if_debug_print(logger::type::error, rsa.get_last_error(), request.path);
+                return;
             }
 
-            for (const auto &node : config.nodes) {
-                if (param.first != node.name) {
-                    continue;
+            if_debug_print(logger::type::info, "decrypted query = " + query, request.path);
+        }
+
+        std::string center_results_src;
+        std::string params_s = str::format("?q={0}&s={1}&e=0", str::replace(query, " ", "+"), s_);
+
+        for (const auto &node : config.nodes) {
+            if_debug_print(logger::type::info, "node = " + node.url, request.path);
+
+            if (e_ == "1") {
+                encryption::rsa rsa_node;
+                auto key = rsa_public_keys.find(node.url)->second;
+                rsa_node.read_public_key_buffer(key.data(), key.size());
+                auto encrypted_base64 = rsa_node.easy_public_encrypt(query);
+
+                if (encrypted_base64.empty()) {
+                    if_debug_print(logger::type::error, rsa_node.get_last_error(), request.path);
+                    return;
                 }
 
-                if_debug_print(logger::type::info, "param = " + param.first, request.path);
-                params_s.append("&" + param.first + "=" + param.second);
-                search_param_inputs.append(str::format(search_param_src_format, param.first, param.second));
+                auto public_key = rsa.get_public_key_buffer();
+                auto key2 = encryption::base64::easy_encode(public_key); //error of curl (CURLE_URL_MALFORMAT)
+                params_s = str::format("?q={0}&s={1}&e=1&ek={2}", encrypted_base64, s_, key2);
+            }
 
-                std::string search_url = str::format("{0}/api/search?q={1}&s={2}", node.url, str::replace(query, " ", "+"), s_);
-                http::request request_(search_url);
-                request_.perform();
+            http::request request_(node.url + "/api/search" + params_s);
+            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.proxy;
+            request_.perform();
 
-                if_debug_print(logger::type::info, "search result code = " + std::to_string(request_.result.code), search_url);
-                if_debug_print(logger::type::info, "search response is empty = " + std::to_string(request_.result.response->empty()), search_url);
-                if (request_.result.code != 200 || request_.result.response->empty()) break;
+            if_debug_print(logger::type::info, "search result code = " + std::to_string(request_.result.code), node.url);
+            if (request_.result.code != 200 || request_.result.response->empty()) break;
 
-                nlohmann::json json = nlohmann::json::parse(*request_.result.response);
-                const auto size = json["count"];
+            auto response = *request_.result.response;
+            auto response2 = response;
 
-                for (int i = 0; i < size; ++i) {
-                    const auto result = json["results"][i];
-                    const auto title = result["title"].get<std::string>();
-                    const auto url = result["url"].get<std::string>();
-                    const auto desc = result["desc"].get<std::string>();
-                    const auto rating = result["rating"].get<size_t>();
-                    const auto has_ads = result["has_ads"].get<bool>() ? "bad" : "good";
-                    const auto has_analytics = result["has_analytics"].get<bool>() ? "bad" : "good";
-                    const auto id = result["id"].get<std::string>();
+            if (e_ == "1") {
+                auto blocks_array = str::split(response, "\n");
+                blocks_array.pop_back(); //empty block
+                response2.clear();
 
-                    std::string result_src = str::format(center_result_src_format, title, url, desc, rating, id, node.url, has_ads, has_analytics);
-                    center_results_src.append(result_src);
+                for (auto &block : blocks_array) {
+                    auto block_decrypted = rsa.easy_private_decrypt(block);
+
+                    if (block_decrypted.empty()) {
+                        if_debug_print(logger::type::error, rsa.get_last_error(), request.path);
+                        return;
+                    }
+
+                    response2.append(block_decrypted);
+                }
+            }
+
+            nlohmann::json json = nlohmann::json::parse(response2);
+            const auto size = json["count"];
+
+            for (int i = 0; i < size; ++i) {
+                const auto result = json["results"][i];
+                const auto title = result["title"].get<std::string>();
+                const auto url = result["url"].get<std::string>();
+                const auto desc = result["desc"].get<std::string>();
+                const auto rating = result["rating"].get<size_t>();
+                const auto has_ads = result["has_ads"].get<bool>() ? "bad" : "good";
+                const auto has_analytics = result["has_analytics"].get<bool>() ? "bad" : "good";
+                const auto id = result["id"].get<std::string>();
+
+                std::string result_src = str::format(center_result_src_format, title, url, desc, rating, id, node.url, has_ads, has_analytics);
+                center_results_src.append(result_src);
+            }
+
+            break;
+        }
+
+        std::string center_results_src2 = center_results_src;
+
+        if (e_ == "1") {
+            encryption::rsa rsa_client;
+            rsa_client.read_public_key_buffer(ek_.data(), ek_.size());
+            center_results_src2.clear();
+
+            //https://crypto.stackexchange.com/questions/32692/what-is-the-typical-block-size-in-rsa/32694#32694
+            int max_bytes = 100; //256 - 11(too large) //128 - 1024, 256 - 2048
+            float size = (float)center_results_src.size() / (float)max_bytes;
+            int size_int = (int)size;
+            if (size > size_int) ++size_int;
+
+            std::string encrypted_center_results;
+
+            for (int i = 0; i < size_int; ++i) {
+                auto result_block = center_results_src.substr(i  * max_bytes, max_bytes);
+                auto block_encrypted = rsa_client.easy_public_encrypt(result_block);
+
+                if (block_encrypted.empty()) {
+                    if_debug_print(logger::type::error, rsa_client.get_last_error(), request.path);
+                    return;
                 }
 
-                break;
+                center_results_src2.append(block_encrypted + "\n");
             }
         }
 
         std::string url = request.path + params_s;
-        str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src);
+        str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src2);
         str::replace_ref(page_src, "{QUERY}", query);
-        str::replace_ref(page_src, "{SEARCH}", search_param_inputs);
         str::replace_ref(page_src, "{PREV_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string((start_index >= 10) ? start_index - 10 : 0)));
         str::replace_ref(page_src, "{NEXT_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string(start_index + 10)));
 
@@ -249,33 +315,34 @@ namespace backend::pages {
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
-    void node_info(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+    void pages::node_info(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../../frontend/src/node/info.html");
 
-        str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host", client)));
-        str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url", client)));
+        str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host")));
+        str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
 
         set_variables(page_src);
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
-    void node_admin_panel(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+    void pages::node_admin_panel(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../../frontend/src/node/admin_panel/index.html");
 
-        str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host", client)));
-        str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url", client)));
-
         set_variables(page_src);
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
-    void api_plus_rating(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+    void pages::api_get_rsa_public_key(const Request &request, Response &response) {
+        response.status = 200;
+        response.set_content(rsa.get_public_key_buffer(), "text/html");
+    }
+    void pages::api_plus_rating(const Request &request, Response &response) {
         const std::string id = request.get_param_value("id");
         const std::string is_redirect = request.get_param_value("redirect");
-        const size_t rating = get_number_field_value(id, "rating", client);
+        const size_t rating = get_number_field_value(id, "rating");
 
         if (rating < 200) {
-            update(id, "rating", rating + 1, client);
+            update(id, "rating", rating + 1);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
@@ -288,13 +355,13 @@ namespace backend::pages {
             response.status = 200;
         }
     }
-    void api_minus_rating(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+    void pages::api_minus_rating(const Request &request, Response &response) {
         const std::string id = request.get_param_value("id");
         const std::string is_redirect = request.get_param_value("redirect");
-        const size_t rating = get_number_field_value(id, "rating", client);
+        const size_t rating = get_number_field_value(id, "rating");
 
         if (rating > 0) {
-            update(id, "rating", rating - 1, client);
+            update(id, "rating", rating - 1);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
@@ -307,21 +374,37 @@ namespace backend::pages {
             response.status = 200;
         }
     }
-    void api_search(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
-        const std::string query = request.get_param_value("q");
-        auto s_ = request.get_param_value("s");
+    void pages::api_search(const Request &request, Response &response) {
+        std::string query = str::replace(request.get_param_value("q"), " ", "+");
+        std::string e_ = request.get_param_value("e");
+        std::string ek_ = request.get_param_value("ek");
+        const std::string s_ = request.get_param_value("s");
         const size_t start_index = (!s_.empty()) ? std::stoi(s_) : 0;
-        const auto search_results = search(query, start_index, client);
         nlohmann::json page_src;
+        std::vector<unsigned char> ek_decrypted;
+
+        if (e_ == "1") {
+            ek_decrypted = encryption::base64::decode(ek_);
+            query = rsa.easy_private_decrypt(query);
+
+            if (query.empty()) {
+                if_debug_print(logger::type::error, rsa.get_last_error(), request.path);
+                return;
+            }
+
+            if_debug_print(logger::type::info, "decrypted query = " + query, request.path);
+        }
+
+        const auto search_results = search(query, start_index);
 
         if (search_results) {
             auto sr_size = search_results->size();
-            if_debug_print(logger::type::info, "search_results = " + sr_size, request.path);
+            if_debug_print(logger::type::info, "search_results = " + std::to_string(sr_size), request.path);
 
             for (int i = 0; i < sr_size; ++i) {
                 const auto &result = search_results->operator[](i);
-                const size_t title_max_size = 55;
-                const size_t desc_max_size  = 350;
+                const size_t title_max_size = 55;   //TODO: CONFIG
+                const size_t desc_max_size  = 350;  //TODO: CONFIG
 
                 //remove html tags from text
                 std::regex regex(R"(<\/?(\w+)(\s+\w+=(\w+|"[^"]*"|'[^']*'))*(( |)\/|)>)"); //<[^<>]+>
@@ -349,19 +432,45 @@ namespace backend::pages {
             if_debug_print(logger::type::info, "search_results = null", request.path);
         }
 
+        std::string result = page_src.dump();
+        std::string result2 = result;
+
+        if (e_ == "1") {
+            encryption::rsa rsa_;
+            rsa_.read_public_key_buffer(ek_decrypted.data(), ek_decrypted.size());
+            result2.clear();
+
+            int max_bytes = 128 - 11; //128 - 1024, 256 - 2048
+            float size = (float)result.size() / (float)max_bytes;
+            int size_int = (int)size;
+            if (size > size_int) ++size_int;
+
+            for (int i = 0; i < size_int; ++i) {
+                auto result_block = result.substr(i  * max_bytes, max_bytes);
+                auto block_encrypted = rsa_.easy_public_encrypt(result_block);
+
+                if (block_encrypted.empty()) {
+                    if_debug_print(logger::type::error, rsa_.get_last_error(), request.path);
+                    return;
+                }
+
+                result2.append(block_encrypted + "\n");
+            }
+        }
+
         response.status = 200;
-        response.set_content(page_src.dump(), "text/html");
+        response.set_content(result2, "text/html");
     }
-    void api_node_info(const httplib::Request &request, httplib::Response &response, opensearch::client &client) {
+    void pages::api_node_info(const Request &request, Response &response) {
         nlohmann::json page_src;
 
-        page_src["websites_count"] = get_field_count("host", client);
-        page_src["pages_count"] = get_field_count("url", client);
+        page_src["websites_count"] = get_field_count("host");
+        page_src["pages_count"] = get_field_count("url");
 
         response.status = 200;
         response.set_content(page_src.dump(), "text/html");
     }
-    void not_found(const httplib::Request &request, httplib::Response &response) {
+    void pages::not_found(const Request &request, Response &response) {
         response.status = 301;
         response.set_redirect("/home");
     }

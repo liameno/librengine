@@ -69,6 +69,8 @@ namespace librengine::http {
         void compute_text();
 
         void set(const CURLUPart &what, const std::string &value);
+
+        bool is_localhost();
     };
 
     class request {

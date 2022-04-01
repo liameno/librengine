@@ -7,6 +7,7 @@
     <mapping directory="$PROJECT_DIR$/website/backend/third_party/Crypto-Example" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/website/backend/third_party/RSA-Library" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/website/backend/third_party/crypt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/website/frontend/js/jsencrypt" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/website/frontend/third_party/aes-lib-js" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/website/frontend/third_party/jsencrypt" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/website/frontend/third_party/safe-exchange" vcs="Git" />

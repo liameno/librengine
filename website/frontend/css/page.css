@@ -1,6 +1,5 @@
 :root {
     --light: #f0eff3;
-    /*#1f1f1f*/
     --dark: #090909;
     --dark_blue: #1f2029;
     --dark_light2: #525252;
@@ -83,4 +82,8 @@ a {
 
 a:hover {
     color: var(--yellow);
+}
+
+.noscript {
+    background: var(--red);
 }

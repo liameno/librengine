@@ -34,15 +34,6 @@ function post_request(url, data) {
         }),
     }).then(response => response.json())
 }
-async function post(url, data) {
-    let response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: data
-    });
-
-    return await response.json();
-}
 
 let button = document.getElementById("add");
 

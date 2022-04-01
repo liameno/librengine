@@ -12,6 +12,10 @@
     <link rel="stylesheet" media="all" href="../css/page.css">
     <link rel="stylesheet" media="all" href="../css/header.css">
     <link rel="stylesheet" media="all" href="../css/index.css">
+
+    <script src="../js/jsencrypt/bin/jsencrypt.min.js"></script>
+    <script src="../js/localstorage.js"></script>
+    <script src="../js/search_encrypt.js"></script>
 </head>
 <body>
 <div class="background"></div>
@@ -20,6 +24,7 @@
         <div class="header_content">
             <nav>
                 <ul>
+                    {NOSCRIPT_CONTENT}
                     {HEADER_CONTENT}
                 </ul>
             </nav>
@@ -27,20 +32,17 @@
     </header>
     <div class="center_container">
         <div class="title">librengine</div>
-        <form class="search_widget" action="search" method="GET">
+        <form autocomplete="off" class="search_widget" id="search_widget" action="search" onsubmit="return submit_form();" method="GET">
             <div class="search">
                 <div class="input_container">
-                    <input class="input" name="q" type="search" value="{QUERY}" placeholder="" required>
+                    <input class="input" name="q" id="q" type="search" value="{QUERY}" placeholder="" required>
                 </div>
                 <input name="s" value="0" type="hidden">
-                <button class="button" type="submit">
+                <input name="e" id="e" value="0" type="hidden">
+                <input name="ek" id="ek"  value="{RSA_PUBLIC_KEY}" type="hidden">
+                <button class="button">
                     <i class="fa fa-search"></i>
                 </button>
-                </div>
-                <div class="checkboxes">
-                    <div class="content_checkboxes">
-                        {CHECKBOXES}
-                    </div>
                 </div>
         </form>
     </div>

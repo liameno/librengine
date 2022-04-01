@@ -14,18 +14,13 @@ Private Opensource Web Search Engine
 	-  Robots Txt...
 -  Website
 	-  Rating
-	-  Without Js
+	-  Encryption RSA (if js is enabled)
 	-  API...
 
 ## TODO
+- [x] Encryption (assymetric)
 - [ ] Robots Rules from headers && html, crawl-delay
-- [ ] Encryption (assymetric)
-- [x] Site Rating
-- [ ] CLI Search
-- [x] API
-- [ ] Export DB
 - [ ] Images Crawler
-- [ ] Admin Panel
 - [ ] Adaptive Website
 
 ## Dependencies

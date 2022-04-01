@@ -1,10 +1,12 @@
+//proxy: type://ip:port
+//socks5://127.0.0.1:9050
+
 {
   "crawler": {
     "user_agent": "librengine",
     "opensearch_url": "http://localhost:9200",
-    //type://ip:port
     "proxy": "socks5://127.0.0.1:9050",
-    "load_page_timeout_s": 10,
+    "load_page_timeout_s": 20,
     "update_time_site_info_s_after": 86400, //10 days
     "delay_time_s": 3, 
     "max_recursive_deep": 2,
@@ -21,8 +23,7 @@
   },
   "website": {
     "port": 8080,
-    //type://ip:port
-    "proxy": "",
+    "proxy": "socks5://127.0.0.1:9050",
     "nodes": [ {
         "name": "This",
         "url": "http://127.0.0.1:8080"

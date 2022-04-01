@@ -12,8 +12,13 @@
     <link rel="stylesheet" media="all" href="../css/page.css">
     <link rel="stylesheet" media="all" href="../css/header.css">
     <link rel="stylesheet" media="all" href="../css/search.css">
+
+    <script src="../js/jsencrypt/bin/jsencrypt.min.js"></script>
+    <script src="../js/localstorage.js"></script>
+    <script src="../js/search_encrypt.js"></script>
+    <script src="../js/search_decrypt_results.js"></script>
 </head>
-<body>
+<body onload="decrypt()">
 <div class="background"></div>
 <div class="container">
     <div class="top_container">
@@ -21,10 +26,11 @@
             <div class="top_left_container">
                 <form class="search_widget" action="search" method="GET">
                     <div class="input_container">
-                        <input class="input" name="q" type="search" value="{QUERY}" placeholder="query" required>
+                        <input class="input" name="q" id="q" type="search" value="{QUERY}" placeholder="query" required>
                     </div>
-                    {SEARCH}
-                    <button class="button" type="submit">
+                    <input name="e" id="e" value="0" type="hidden">
+                    <input name="ek" id="ek" value="{RSA_PUBLIC_KEY}" type="hidden">
+                    <button class="button">
                         <i class="fa fa-search"></i>
                     </button>
                 </form>
@@ -33,6 +39,7 @@
             <div class="header_content">
                 <nav>
                     <ul>
+                        {NOSCRIPT_CONTENT}
                         {HEADER_CONTENT}
                     </ul>
                 </nav>
