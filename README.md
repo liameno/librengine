@@ -14,14 +14,11 @@ Privacy Opensource Web Search Engine
 | Litecoin (LTC) | LLQMiWpF1cxET7p7UMYoWjJ26JuTp14u8K |
 | Monero (XMR) | 4AkPUBr4uoFV1K4fSitpGJjRHo4dfSzZ257YR9HxiQi3DvmgLW1rteRQfRRCFYytKugcygfHAvvJu3Tt96mSoVUE6JKJDZL |
 ## Features
--  Addon
-	-  Add Current Website
 -  Crawler
 	-  Proxy
 	-  Http To Https
 	-  Robots Txt...
 -  Website
-	-  Rating
 	-  Encryption RSA (if js is enabled)
 	-  API...
 
