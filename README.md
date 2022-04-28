@@ -53,12 +53,12 @@ sudo apt install libssl-dev
 ```shell
 git clone https://github.com/liameno/librengine
 cd librengine
-sh build_all.sh
+sh scripts/build_all.sh
 ```
 ## Run
 ```shell
 opensearch
-sh set_opensearch.sh
+sh scripts/set_opensearch.sh
 ```
 #### Crawler
 ```shell
