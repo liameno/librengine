@@ -9,7 +9,7 @@ struct search_result {
     std::string title;
     std::string url;
     std::string desc;
-    size_t rating{0};
+    size_t rating;
 };
 
 static std::optional<std::vector<search_result>> search(const std::string &q, const size_t &s, opensearch::client &client) {

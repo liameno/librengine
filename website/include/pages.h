@@ -1,4 +1,5 @@
 #include <optional>
+#include <librengine/structs.h>
 #include <librengine/config.h>
 #include <librengine/logger.h>
 #include <librengine/json.hpp>
@@ -18,29 +19,17 @@
 #ifndef PAGES_H
 #define PAGES_H
 
-namespace backend {
+namespace website {
     using namespace librengine;
     using namespace httplib;
 
     class pages {
-    public:
-        struct search_result {
-            std::string id;
-            std::string title;
-            std::string url;
-            std::string desc;
-            size_t rating;
-            bool has_ads;
-            bool has_analytics;
-        };
     private:
+        config::all config;
         encryption::rsa rsa;
-        config::website config;
-        typesense db;
-
         std::map<std::string, std::string> rsa_public_keys;
     public:
-        pages(const config::website &config, const config::db &db);
+        pages(const config::all &config);
         void init();
     
         void set_variables(std::string &page_src);
@@ -48,7 +37,6 @@ namespace backend {
         void update(const std::string &id, const std::string &field, const size_t &value);
         void update(const std::string &id, const std::string &field, const std::string &value);
         size_t get_number_field_value(const std::string &id, const std::string &field);
-        /*size_t get_last_added_website_date(opensearch::client &client);*/
         std::optional<std::vector<search_result>> search(const std::string &q, const size_t &p);
         size_t get_field_count(const std::string &field);
 

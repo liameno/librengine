@@ -1,16 +1,5 @@
 #include "../include/pages.h"
 
-#include <optional>
-#include <librengine/config.h>
-#include <librengine/opensearch.h>
-#include <librengine/logger.h>
-#include <librengine/json.hpp>
-#include <librengine/str.h>
-#include <librengine/str_impl.h>
-#include <librengine/http.h>
-#include <cstring>
-#include <thread>
-
 #define DEBUG true //TODO: FALSE
 
 void if_debug_print(const logger::type &type, const std::string &text, const std::string &ident) {
@@ -19,18 +8,16 @@ void if_debug_print(const logger::type &type, const std::string &text, const std
 #endif
 }
 
-namespace backend {
-    pages::pages(const config::website &config, const config::db &db) {
-        this->rsa = encryption::rsa();
+namespace website {
+    pages::pages(const config::all &config) {
         this->config = config;
-        this->db = typesense(db.url, "websites", db.api_key);
-
+        this->rsa = encryption::rsa();
         this->rsa.generate_keys(1024);
     }
     void pages::init() {
-        for (const auto &node : config.nodes) {
+        for (const auto &node : config.global_.nodes) {
             http::request request_(node.url + "/api/get_rsa_public_key");
-            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.proxy;
+            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.website_.proxy;
             request_.perform();
 
             rsa_public_keys.insert({node.url, request_.result.response.value_or("")});
@@ -49,26 +36,26 @@ namespace backend {
     }
 
     void pages::update(const std::string &id, const std::string &field, const size_t &value) {
-        const auto response = db.get(std::stoi(id));
+        const auto response = config.db_.websites.get(std::stoi(id));
         nlohmann::json result_json = nlohmann::json::parse(response);
         result_json[field] = value;
 
-        db.update(result_json.dump());
+        config.db_.websites.update(result_json.dump());
     }
     void pages::update(const std::string &id, const std::string &field, const std::string &value) {
-        const auto response = db.get(std::stoi(id));
+        const auto response = config.db_.websites.get(std::stoi(id));
         nlohmann::json result_json = nlohmann::json::parse(response);
         result_json[field] = value;
 
-        db.update(result_json.dump());
+        config.db_.websites.update(result_json.dump());
     }
     size_t pages::get_number_field_value(const std::string &id, const std::string &field) {
-        const auto response = db.get(std::stoi(id));
+        const auto response = config.db_.websites.get(std::stoi(id));
         nlohmann::json result_json = nlohmann::json::parse(response);
         return result_json[field];
     }
-    std::optional<std::vector<pages::search_result>> pages::search(const std::string &q, const size_t &p) {
-        const auto response = db.search(q, "url,title,desc", {{"page", std::to_string(p)}});
+    std::optional<std::vector<librengine::search_result>> pages::search(const std::string &q, const size_t &p) {
+        const auto response = config.db_.websites.search(q, "url,title,desc", {{"page", std::to_string(p)}});
         nlohmann::json result_json = nlohmann::json::parse(response);
 
         const auto body = result_json["hits"];
@@ -102,7 +89,7 @@ namespace backend {
         return results;
     }
     size_t pages::get_field_count(const std::string &field) {
-        const auto response = db.search("*", field);
+        const auto response = config.db_.websites.search("*", field);
         nlohmann::json result_json = nlohmann::json::parse(response);
         return result_json["found"];
     }
@@ -156,7 +143,7 @@ namespace backend {
 
         std::string center_results_src;
 
-        for (const auto &node : config.nodes) {
+        for (const auto &node : config.global_.nodes) {
             if_debug_print(logger::type::info, "node = " + node.url, request.path);
             std::string params_s2;
 
@@ -177,7 +164,7 @@ namespace backend {
             }
 
             http::request request_(node.url + "/api/search" + params_s2);
-            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.proxy;
+            if (!http::url(node.url).is_localhost()) request_.options.proxy = config.website_.proxy;
             request_.perform();
 
             if_debug_print(logger::type::info, "search result code = " + std::to_string(request_.result.code), node.url);
@@ -231,7 +218,7 @@ namespace backend {
             center_results_src2.clear();
 
             //https://crypto.stackexchange.com/questions/32692/what-is-the-typical-block-size-in-rsa/32694#32694
-            int max_bytes = 100; //256 - 11(too large) //128 - 1024, 256 - 2048
+            int max_bytes = 100;//256 - 11(too large) //128 - 1024, 256 - 2048
             float size = (float)center_results_src.size() / (float)max_bytes;
             int size_int = (int)size;
             if (size > size_int) ++size_int;
@@ -264,7 +251,7 @@ namespace backend {
     void pages::node_info(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../frontend/src/node/info.html");
 
-        str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host")));
+        str::replace_ref(page_src, "{websites_S_COUNT}", std::to_string(get_field_count("host")));
         str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
 
         set_variables(page_src);
@@ -410,7 +397,7 @@ namespace backend {
     void pages::api_node_info(const Request &request, Response &response) {
         nlohmann::json page_src;
 
-        //page_src["websites_count"] = get_field_count("host");
+        //page_src["websites_s_count"] = get_field_count("host");
         page_src["pages_count"] = get_field_count("url");
 
         response.status = 200;

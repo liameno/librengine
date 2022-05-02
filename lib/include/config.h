@@ -8,12 +8,23 @@
 #include "http.h"
 #include "str_impl.h"
 #include "json.hpp"
+#include "typesense.h"
 
 namespace librengine::config {
     namespace helper {
         std::string get_file_content(const std::string &path);
     }
 
+    struct global {
+        struct node_s {
+            std::string name;
+            std::string url;
+        };
+
+        std::vector<node_s> nodes;
+
+        void load_from_file(const std::string &path);
+    };
     struct crawler {
         std::string user_agent;
         std::string start_site_url;
@@ -34,35 +45,35 @@ namespace librengine::config {
         bool is_check_robots_txt;
 
         void load_from_file(const std::string &path);
-        std::string to_str() const;
     };
     struct cli {
-        std::string query;
-        size_t start_index;
-        size_t mode;
+        std::optional<http::proxy> proxy;
 
         void load_from_file(const std::string &path);
-        std::string to_str() const;
     };
     struct website {
-        struct node_s {
-            std::string name;
-            std::string url;
-        };
-
         size_t port;
         std::optional<http::proxy> proxy;
-        std::vector<node_s> nodes;
 
         void load_from_file(const std::string &path);
-        std::string to_str() const;
     };
     struct db {
         std::string url;
         std::string api_key;
+        typesense websites;
+        typesense robots;
 
         void load_from_file(const std::string &path);
-        std::string to_str() const;
+    };
+
+    struct all {
+        global global_;
+        crawler crawler_;
+        cli cli_;
+        website website_;
+        db db_;
+
+        void load_from_file(const std::string &path);
     };
 }
 

@@ -4,6 +4,14 @@
 //_s - seconds
 
 {
+  "global": {
+    "nodes": [
+      {
+        "name": "This",
+        "url": "http://127.0.0.1:8080"
+      }
+    ]
+  },
   "crawler": {
     "user_agent": "librengine",
     "proxy": "socks5://127.0.0.1:9050",
@@ -19,17 +27,11 @@
     "is_check_robots_txt": true
   },
   "cli": {
-    //local=0 | nodes=1(website/backend)
-    "mode": 0
+    "proxy": "socks5://127.0.0.1:9050"
   },
   "website": {
     "port": 8080,
-    "proxy": "socks5://127.0.0.1:9050",
-    "nodes": [ {
-        "name": "This",
-        "url": "http://127.0.0.1:8080"
-      }
-    ]
+    "proxy": "socks5://127.0.0.1:9050"
   },
   //edit also init_db.sh
   "db": {

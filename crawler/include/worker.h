@@ -21,9 +21,7 @@ public:
         error,
     };
 private:
-    librengine::config::crawler config;
-    librengine::typesense db_website;
-    librengine::typesense db_robots;
+    librengine::config::all config;
     bool is_work = false;
 public:
     std::optional<std::string> compute_website_json(const std::string &title, const std::string &url, const std::string &host, const std::string &desc, const bool &has_ads, const bool &has_analytics);
@@ -41,7 +39,7 @@ public:
 
     bool normalize_url(librengine::http::url &url, const std::optional<std::string> &owner_host = std::nullopt) const;
 public:
-    worker(librengine::config::crawler config, const librengine::config::db &db);
+    worker(const librengine::config::all &config);
     result main_thread(const std::string &site_url, int &deep, const std::optional<librengine::http::url> &owner_url = std::nullopt);
 };
 

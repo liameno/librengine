@@ -5,7 +5,7 @@
 #include <memory>
 #include <map>
 
-#include <librengine/http.h>
+#include "http.h"
 
 namespace librengine {
     class typesense {

@@ -100,9 +100,9 @@ std::string worker::compute_desc(const std::string &tag_name, lxb_html_document 
 
 std::optional<std::string> worker::get_added_robots_txt(const std::string &host) {
     const auto now = compute_time();
-    auto filter_by = "date:>" + std::to_string(now - config.update_time_site_info_s_after) +  " && date:<" + std::to_string(now);
+    auto filter_by = "date:>" + std::to_string(now - config.crawler_.update_time_site_info_s_after) +  " && date:<" + std::to_string(now);
 
-    const auto search_response = db_robots.search(host, "host", {{"filter_by", filter_by}});
+    const auto search_response = config.db_.robots.search(host, "host", {{"filter_by", filter_by}});
     nlohmann::json result_json = nlohmann::json::parse(search_response);
     const auto value = result_json["found"];
 
@@ -118,9 +118,9 @@ std::optional<std::string> worker::get_added_robots_txt(const std::string &host)
 }
 size_t worker::hints_count_added(const std::string &field, const std::string &url) {
     const auto now = compute_time();
-    auto filter_by = "date:>" + std::to_string(now - config.update_time_site_info_s_after) +  " && date:<" + std::to_string(now);
+    auto filter_by = "date:>" + std::to_string(now - config.crawler_.update_time_site_info_s_after) +  " && date:<" + std::to_string(now);
 
-    const auto search_response = db_website.search(url, "url", {{"filter_by", filter_by}});
+    const auto search_response = config.db_.websites.search(url, "url", {{"filter_by", filter_by}});
     nlohmann::json result_json = nlohmann::json::parse(search_response);
     const auto value = result_json["found"];
 
@@ -133,16 +133,16 @@ size_t worker::hints_count_added(const std::string &field, const std::string &ur
 http::request::result_s worker::site(const http::url &url) {
     http::request request(url.text);
 
-    request.options.timeout_s = config.load_page_timeout_s;
-    request.options.user_agent = config.user_agent;
-    request.options.proxy = config.proxy;
+    request.options.timeout_s = config.crawler_.load_page_timeout_s;
+    request.options.user_agent = config.crawler_.user_agent;
+    request.options.proxy = config.crawler_.proxy;
     request.perform();
 
     return request.result;
 }
 bool worker::is_allowed_in_robots(const std::string &body, const std::string &url) {
     Rep::Robots robots = Rep::Robots(body);
-    return robots.allowed(url, config.user_agent);
+    return robots.allowed(url, config.crawler_.user_agent);
 }
 std::optional<std::string> worker::get_robots_txt(const http::url &url) {
     http::url url_cp(url.text);
@@ -150,9 +150,9 @@ std::optional<std::string> worker::get_robots_txt(const http::url &url) {
     url_cp.parse();
 
     http::request request(url_cp.text);
-    request.options.timeout_s = config.load_page_timeout_s;
-    request.options.user_agent = config.user_agent;
-    request.options.proxy = config.proxy;
+    request.options.timeout_s = config.crawler_.load_page_timeout_s;
+    request.options.user_agent = config.crawler_.user_agent;
+    request.options.proxy = config.crawler_.proxy;
     request.perform();
 
     if (request.result.code != 200) return std::nullopt;
@@ -205,7 +205,7 @@ bool worker::normalize_url(http::url &url, const std::optional<std::string> &own
         url.parse();
     }
 
-    if (this->config.is_http_to_https) {
+    if (config.crawler_.is_http_to_https) {
         if (url.scheme && url.scheme == "http") {
             url.set(CURLUPART_SCHEME, "https"); //protocol
         }
@@ -229,10 +229,9 @@ bool worker::normalize_url(http::url &url, const std::optional<std::string> &own
     return true;
 }
 
-worker::worker(config::crawler config, const config::db &db) : config(std::move(config)) {
+worker::worker(const config::all &config) {
+    this->config = config;
     this->is_work = true;
-    this->db_website = typesense(db.url, "websites", db.api_key);
-    this->db_robots = typesense(db.url, "robots", db.api_key);
 }
 
 worker::result worker::main_thread(const std::string &site_url, int &deep, const std::optional<http::url> &owner_url) {
@@ -255,7 +254,7 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
         if_debug_print(logger::type::error, "url == owner", url.text);
         return result::already_added;
     }
-    if (config.is_one_site && owner_url && url.host != owner_url->host) {
+    if (config.crawler_.is_one_site && owner_url && url.host != owner_url->host) {
         return result::already_added;
     }
     if (hints_count_added("url", url.text) > 0) {
@@ -265,12 +264,12 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
 
     size_t pages_count = hints_count_added("host", *url.host);
 
-    if (pages_count >= this->config.max_pages_site) {
+    if (pages_count >= config.crawler_.max_pages_site) {
         if_debug_print(logger::type::error, "pages count >= limit", url.text);
         return result::pages_limit;
     }
 
-    if (this->config.is_check_robots_txt) {
+    if (config.crawler_.is_check_robots_txt) {
         auto robots_txt_body = get_added_robots_txt(*url.host).value_or("");
         bool is_checked = true;
 
@@ -278,10 +277,10 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
             robots_txt_body = get_robots_txt(url).value_or("");
             auto robots_txt_body_length = robots_txt_body.length();
 
-            if (robots_txt_body_length > 1 && robots_txt_body_length < this->config.max_robots_txt_symbols) {
+            if (robots_txt_body_length > 1 && robots_txt_body_length < config.crawler_.max_robots_txt_symbols) {
                 const auto json = compute_robots_txt_json(robots_txt_body, *url.host);
                 if (!json) return result::null_or_limit;
-                db_robots.add(*json);
+                config.db_.robots.add(*json);
             } else {
                 is_checked = false;
             }
@@ -304,7 +303,7 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
         if_debug_print(logger::type::error, "code != 200", url.text);
         return result::null_or_limit;
     }
-    if (!response || response_length < 1 || response_length >= this->config.max_page_symbols) {
+    if (!response || response_length < 1 || response_length >= config.crawler_.max_page_symbols) {
         if_debug_print(logger::type::error, "response = null || length < 1 || >= limit", url.text);
         return result::null_or_limit;
     }
@@ -361,12 +360,12 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
     const auto json = compute_website_json(title, url.text, *url.host, desc, has_ads, has_analytics);
     if (!json) return result::null_or_limit;
 
-    db_website.add(*json);
+    config.db_.websites.add(*json);
 
     //print added url
     std::cout << logger::yellow << "[" << url.text << "]" << std::endl;
 
-    if (deep < this->config.max_recursive_deep) {
+    if (deep < config.crawler_.max_recursive_deep) {
         auto collection = lxb_dom_collection_make(&(*document)->dom_document, 16);
         lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, std_string_to_lxb("a"), 1);
         const auto a_length = collection->array.length;
@@ -395,7 +394,7 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
             if (!str::starts_with(*href_value, "http")) {
                 result = main_thread(href_url.text, deep, url);
             } else {
-                if (config.is_one_site && href_url.host != url.host) {
+                if (config.crawler_.is_one_site && href_url.host != url.host) {
                     //skip other sites
                     continue;
                 }
@@ -410,7 +409,7 @@ worker::result worker::main_thread(const std::string &site_url, int &deep, const
                 pages_limit_hosts.push_back(*href_url.host);
             } else if (result == result::added || result == result::disallowed_robots) {
                 //delay
-                std::this_thread::sleep_for(std::chrono::seconds(this->config.delay_time_s));
+                std::this_thread::sleep_for(std::chrono::seconds(config.crawler_.delay_time_s));
             }
         }
 
