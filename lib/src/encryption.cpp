@@ -33,7 +33,9 @@ namespace encryption {
         s_key[length] = '\0';
 
         BIO_free(key);
-        return s_key;
+        std::string str = s_key;
+        free(s_key);
+        return str;
     }
     std::string rsa::get_private_key_buffer() {
         BIO *key = BIO_new(BIO_s_mem());
@@ -50,17 +52,11 @@ namespace encryption {
     }
 
     void rsa::read_public_key_buffer(void *text, const int &size) {
-        /*BIO *keybio ;
-        keybio = BIO_new_mem_buf(text, size);
-        p_rsa = PEM_read_bio_RSA_PUBKEY(keybio, &p_rsa, NULL, NULL);*/
         FILE *fp = fmemopen(text, size, "rb");
         PEM_read_RSA_PUBKEY(fp, &p_rsa, nullptr, nullptr);
         fclose(fp);
     }
     void rsa::read_private_key_buffer(void *text, const int &size) {
-        /*BIO *keybio ;
-        keybio = BIO_new_mem_buf(text, size);
-        p_rsa = PEM_read_bio_RSAPrivateKey(keybio, &p_rsa, NULL, NULL);*/
         FILE *fp = fmemopen(text, size, "rb");
         PEM_read_RSAPrivateKey(fp, &p_rsa, nullptr, nullptr);
         fclose(fp);
@@ -100,7 +96,7 @@ namespace encryption {
         }
 
         std::string result = encryption::base64::encode(encrypted, encrypted_size);
-        delete[] encrypted;
+        free(encrypted);
         return result;
     }
     std::string rsa::easy_private_encrypt(std::string &text) {
@@ -113,7 +109,7 @@ namespace encryption {
         }
 
         std::string result = encryption::base64::encode(encrypted, encrypted_size);
-        delete[] encrypted;
+        free(encrypted);
         return result;
     }
     std::string rsa::easy_public_decrypt(std::string &text) {
@@ -126,7 +122,7 @@ namespace encryption {
         }
 
         std::string result = reinterpret_cast<char *>(decrypted);
-        delete[] decrypted;
+        free(decrypted);
         return result.substr(0, decrypted_size);
     }
     std::string rsa::easy_private_decrypt(std::string &text) {
@@ -139,7 +135,7 @@ namespace encryption {
         }
 
         std::string result = reinterpret_cast<char *>(decrypted);
-        delete[] decrypted;
+        free(decrypted);
         return result.substr(0, decrypted_size);
     }
 
