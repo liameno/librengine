@@ -48,7 +48,9 @@ namespace encryption {
         s_key[length] = '\0';
 
         BIO_free(key);
-        return s_key;
+        std::string str = s_key;
+        free(s_key);
+        return str;
     }
 
     void rsa::read_public_key_buffer(void *text, const int &size) {
