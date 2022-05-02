@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(backend)
+project(website)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -11,5 +11,5 @@ find_package(CURL)
 find_package(Threads)
 find_package(OpenSSL)
 
-add_executable(${PROJECT_NAME} main.cpp third_party/httplib.h src/pages.cpp include/pages.h src/encryption.cpp include/encryption.h)
+add_executable(${PROJECT_NAME} main.cpp third_party/httplib.h src/pages.cpp include/pages.h)
 target_link_libraries(${PROJECT_NAME} PRIVATE /usr/lib/liblexbor.so curl OpenSSL::Crypto Threads::Threads /usr/local/lib/liblibrengine.so)

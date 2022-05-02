@@ -24,7 +24,7 @@
     <div class="top_container">
         <div class="top_container_content">
             <div class="top_left_container">
-                <form class="search_widget" action="search" method="GET">
+                <form autocomplete="off"  class="search_widget" action="search" onsubmit="return submit_form();"  method="GET">
                     <div class="input_container">
                         <input class="input" name="q" id="q" type="search" value="{QUERY}" placeholder="query" required>
                     </div>

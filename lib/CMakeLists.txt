@@ -3,8 +3,8 @@ project(librengine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(include include/opensearch.h include/http.h include/str.h include/str_impl.h include/config.h include/logger.h include/json.hpp)
-set(src src/opensearch.cpp src/http.cpp src/str.cpp src/logger.cpp src/config.cpp)
+set(include include/encryption.h include/typesense.h include/http.h include/str.h include/str_impl.h include/config.h include/logger.h include/json.hpp)
+set(src src/encryption.cpp src/typesense.cpp src/http.cpp src/str.cpp src/logger.cpp src/config.cpp)
 
 set(include_all ${include} ${tp_rep_cpp} ${tp_url_cpp})
 set(src_all ${src})

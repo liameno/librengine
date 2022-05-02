@@ -1,11 +1,12 @@
 #include <optional>
 #include <librengine/config.h>
-#include <librengine/opensearch.h>
 #include <librengine/logger.h>
 #include <librengine/json.hpp>
 #include <librengine/str.h>
 #include <librengine/str_impl.h>
 #include <librengine/http.h>
+#include <librengine/typesense.h>
+#include <librengine/encryption.h>
 #include <iostream>
 #include <cstring>
 #include <thread>
@@ -13,7 +14,6 @@
 #include <map>
 
 #include "../third_party/httplib.h"
-#include "encryption.h"
 
 #ifndef PAGES_H
 #define PAGES_H
@@ -36,11 +36,11 @@ namespace backend {
     private:
         encryption::rsa rsa;
         config::website config;
-        opensearch::client client;
+        typesense db;
 
         std::map<std::string, std::string> rsa_public_keys;
     public:
-        pages(const config::website &config, opensearch::client &client);
+        pages(const config::website &config, const config::db &db);
         void init();
     
         void set_variables(std::string &page_src);
@@ -49,7 +49,7 @@ namespace backend {
         void update(const std::string &id, const std::string &field, const std::string &value);
         size_t get_number_field_value(const std::string &id, const std::string &field);
         /*size_t get_last_added_website_date(opensearch::client &client);*/
-        std::optional<std::vector<search_result>> search(const std::string &q, const size_t &s);
+        std::optional<std::vector<search_result>> search(const std::string &q, const size_t &p);
         size_t get_field_count(const std::string &field);
 
         void home(const Request &request, Response &response);

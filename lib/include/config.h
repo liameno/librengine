@@ -17,7 +17,6 @@ namespace librengine::config {
     struct crawler {
         std::string user_agent;
         std::string start_site_url;
-        std::string opensearch_url;
 
         std::optional<http::proxy> proxy;
 
@@ -51,9 +50,16 @@ namespace librengine::config {
             std::string url;
         };
 
-        size_t port                         = 8080;
-        std::optional<http::proxy> proxy    = std::nullopt; //socks5://127.0.0.1:9050
-        std::vector<node_s> nodes             = {};
+        size_t port;
+        std::optional<http::proxy> proxy;
+        std::vector<node_s> nodes;
+
+        void load_from_file(const std::string &path);
+        std::string to_str() const;
+    };
+    struct db {
+        std::string url;
+        std::string api_key;
 
         void load_from_file(const std::string &path);
         std::string to_str() const;

@@ -19,7 +19,11 @@ function decrypt() {
 
         item = item.replaceAll("\n", "");
         item = item.trim();
-        result += rsa.decrypt(item);
+
+        let decrypted = rsa.decrypt(item);
+        if (decrypted == null) continue;
+
+        result += decrypted;
     }
 
     splited = splited.slice(last_i);

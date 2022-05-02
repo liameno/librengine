@@ -19,7 +19,6 @@ namespace librengine::config {
         auto json_crawler = json["crawler"];
 
         this->user_agent = json_crawler["user_agent"].get<std::string>();
-        this->opensearch_url = json_crawler["opensearch_url"].get<std::string>();
 
         std::string proxy_string = json_crawler["proxy"].get<std::string>();
 
@@ -40,10 +39,10 @@ namespace librengine::config {
     }
 
     std::string crawler::to_str() const {
-        const std::string format = "UA={0}\nStartSiteUrl={1}\nOpenSearchUrl={2}\nProxy={3}\nMaxRecDeep={4}"
-                                   "\nLPageTimeoutS={5}\nUpdateTimeSISAfter={6}\nDelayTimeS={7}\nMaxPagesS={8}\nMaxPageSym={9}"
-                                   "\nMaxRobotsTSym={10}\nIsOneSite={11}\nIsHttpToHttps={12}\nIsCheckRobots={13}";
-        return str::format(format, user_agent, start_site_url, opensearch_url,
+        const std::string format = "UA={0}\nStartSiteUrl={1}\nProxy={2}\nMaxRecDeep={3}"
+                                   "\nLPageTimeoutS={4}\nUpdateTimeSISAfter={5}\nDelayTimeS={6}\nMaxPagesS={7}\nMaxPageSym={8}"
+                                   "\nMaxRobotsTSym={9}\nIsOneSite={10}\nIsHttpToHttps={11}\nIsCheckRobots={12}";
+        return str::format(format, user_agent, start_site_url,
                            (proxy) ? proxy->compute_curl_format() : "null", max_recursive_deep,
                            load_page_timeout_s, update_time_site_info_s_after, delay_time_s, max_pages_site,
                            max_page_symbols, max_robots_txt_symbols,
@@ -86,5 +85,19 @@ namespace librengine::config {
     std::string website::to_str() const {
         const std::string format = "Port={0}\nProxy={1}\nNodes={2}";
         return str::format(format, port, (proxy) ? proxy->compute_curl_format() : "null", nodes.size());
+    }
+
+    void db::load_from_file(const std::string &path) {
+        const std::string content = helper::get_file_content(path);
+        nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
+        auto json_db = json["db"];
+
+        this->url = json_db["url"].get<std::string>();
+        this->api_key = json_db["api_key"].get<std::string>();
+    }
+
+    std::string db::to_str() const {
+        const std::string format = "Url={0}\nApiKey={1}";
+        return str::format(format, url, api_key);
     }
 }

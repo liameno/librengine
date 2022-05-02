@@ -20,10 +20,10 @@ void if_debug_print(const logger::type &type, const std::string &text, const std
 }
 
 namespace backend {
-    pages::pages(const config::website &config, opensearch::client &client) {
+    pages::pages(const config::website &config, const config::db &db) {
         this->rsa = encryption::rsa();
         this->config = config;
-        this->client = client;
+        this->db = typesense(db.url, "websites", db.api_key);
 
         this->rsa.generate_keys(1024);
     }
@@ -41,83 +41,37 @@ namespace backend {
         const std::string noscript_src = R"(<noscript><span class="noscript">Encryption doesn't work without js</span></noscript>)";
         const std::string header_src = R"(<li><a href="/home">Home</a></li><li><a href="/node/info">Node Info</a></li><li><a href="https://github.com/liameno/librengine">Github</a></li>)";
 
-        str::replace_ref(page_src, "{RSA_PUBLIC_KEY}", rsa.get_public_key_buffer());
+        auto key = rsa.get_public_key_buffer();
+
+        str::replace_ref(page_src, "{RSA_PUBLIC_KEY}", encryption::base64::easy_encode(key));
         str::replace_ref(page_src, "{NOSCRIPT_CONTENT}", noscript_src);
         str::replace_ref(page_src, "{HEADER_CONTENT}", header_src);
     }
 
     void pages::update(const std::string &id, const std::string &field, const size_t &value) {
-        const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
-        const auto type = opensearch::client::request_type::POST;
+        const auto response = db.get(std::stoi(id));
+        nlohmann::json result_json = nlohmann::json::parse(response);
+        result_json[field] = value;
 
-        nlohmann::json json;
-        json["doc"][field] = value;
-
-        const auto response = client.custom_request(path, type, json.dump());
+        db.update(result_json.dump());
     }
     void pages::update(const std::string &id, const std::string &field, const std::string &value) {
-        const auto path = opensearch::client::path_options("website/_doc/" + id + "/_update");
-        const auto type = opensearch::client::request_type::POST;
+        const auto response = db.get(std::stoi(id));
+        nlohmann::json result_json = nlohmann::json::parse(response);
+        result_json[field] = value;
 
-        nlohmann::json json;
-        json["doc"][field] = value;
-
-        const auto response = client.custom_request(path, type, json.dump());
+        db.update(result_json.dump());
     }
     size_t pages::get_number_field_value(const std::string &id, const std::string &field) {
-        const auto path = opensearch::client::path_options("website/_doc/" + id);
-        const auto type = opensearch::client::request_type::GET;
-
-        const auto response = client.custom_request(path, type);
-        nlohmann::json result_json = nlohmann::json::parse(*response);
-        const auto rating = result_json["_source"][field];
-
-        if (rating.is_null()) return 0;
-        if (rating > 0) return (size_t)rating;
-
-        return 0;
+        const auto response = db.get(std::stoi(id));
+        nlohmann::json result_json = nlohmann::json::parse(response);
+        return result_json[field];
     }
-    /*size_t pages::get_last_added_website_date(opensearch::client &client) {
-        const auto path = opensearch::client::path_options("website/_search");
-        const auto type = opensearch::client::request_type::POST;
+    std::optional<std::vector<pages::search_result>> pages::search(const std::string &q, const size_t &p) {
+        const auto response = db.search(q, "url,title,desc", {{"page", std::to_string(p)}});
+        nlohmann::json result_json = nlohmann::json::parse(response);
 
-        nlohmann::json json;
-
-        json["size"] = 1;
-        json["sort"][0]["date"]["order"] = "desc";
-
-        const auto response = client.custom_request(path, type, json.dump());
-        nlohmann::json result_json = nlohmann::json::parse(*response);
-        const auto value = result_json["hits"]["total"]["value"];
-
-        if (value.is_null()) return std::nullopt;
-        if (value < 0) return std::nullopt;
-
-        const auto body = result_json["hits"]["hits"];
-        if (body.is_null()) return std::nullopt;
-
-        auto hit = body[0];
-
-        size_t hit_date = hit["_source"]["date"];
-        size_t current_date = time(nullptr);
-
-        return current_date - hit_date;
-    }*/
-    std::optional<std::vector<pages::search_result>> pages::search(const std::string &q, const size_t &s) {
-        const auto path = opensearch::client::path_options("website/_search");
-        const auto type = opensearch::client::request_type::POST;
-
-        nlohmann::json json;
-
-        json["query"]["query_string"]["fields"] = {"url", "title", "desc"};
-        json["query"]["query_string"]["query"] = q;
-        json["size"] = 10;
-        json["from"] = s;
-
-        const auto response = client.custom_request(path, type, json.dump());
-        nlohmann::json result_json = nlohmann::json::parse(*response);
-
-        const auto body = result_json["hits"]["hits"];
+        const auto body = result_json["hits"];
         if (body.is_null() || body.empty()) return std::nullopt;
 
         size_t value = body.size();
@@ -128,15 +82,16 @@ namespace backend {
         for (int i = 0; i < value; ++i) {
             search_result result;
             auto hit = body[i];
+            auto hit_doc = hit["document"];
 
             try {
-                result.id = hit["_id"];
-                result.title = hit["_source"]["title"];
-                result.url = hit["_source"]["url"];
-                result.desc = hit["_source"]["desc"];
-                result.rating = hit["_source"]["rating"];
-                result.has_ads = hit["_source"]["has_ads"];
-                result.has_analytics = hit["_source"]["has_analytics"];
+                result.id = hit_doc["id"];
+                result.title = hit_doc["title"];
+                result.url = hit_doc["url"];
+                result.desc = hit_doc["desc"];
+                result.rating = hit_doc["rating"];
+                result.has_ads = hit_doc["has_ads"];
+                result.has_analytics = hit_doc["has_analytics"];
             } catch (const nlohmann::json::exception &e) {
                 continue;
             }
@@ -147,25 +102,13 @@ namespace backend {
         return results;
     }
     size_t pages::get_field_count(const std::string &field) {
-        const auto path = opensearch::client::path_options("website/_search");
-        const auto type = opensearch::client::request_type::POST;
-
-        nlohmann::json json;
-
-        json["aggs"]["host_uniq"]["terms"]["field"] = field;
-        json["aggs"]["host_uniq"]["terms"]["size"] = 1;
-        json["size"] = 0;
-
-        const auto response = client.custom_request(path, type, json.dump());
-        nlohmann::json result_json = nlohmann::json::parse(*response);
-        const auto value = result_json["aggregations"]["host_uniq"]["sum_other_doc_count"];
-
-        if (value.is_null()) return 0;
-        return (size_t)value + 1;
+        const auto response = db.search("*", field);
+        nlohmann::json result_json = nlohmann::json::parse(response);
+        return result_json["found"];
     }
 
     void pages::home(const Request &request, Response &response) {
-        std::string page_src = config::helper::get_file_content("../../frontend/src/index.html");
+        std::string page_src = config::helper::get_file_content("../frontend/src/index.html");
         const std::string query = request.get_param_value("q");
         str::replace_ref(page_src, "{QUERY}", query);
 
@@ -174,12 +117,12 @@ namespace backend {
         response.set_content(page_src, "text/html");
     }
     void pages::search(const Request &request, Response &response) {
-        std::string page_src = config::helper::get_file_content("../../frontend/src/search.html");
-        std::string query = request.get_param_value("q");
+        std::string page_src = config::helper::get_file_content("../frontend/src/search.html");
+        std::string query = str::replace(request.get_param_value("q"), " ", "+");
         std::string e_ = request.get_param_value("e");
         std::string ek_ = request.get_param_value("ek");
-        const std::string s_ = request.get_param_value("s");
-        const size_t start_index = (!s_.empty()) ? std::stoi(s_) : 0;
+        const std::string p_ = request.get_param_value("p");
+        const size_t page = (!p_.empty()) ? std::stoi(p_) : 1;
         const std::string center_result_src_format = "<div class=\"center_result\">"
                                                      "<div class=\"content\">"
                                                      "<a class=\"title\" href=\"{1}\">{0}<span><i class=\"fa fa-ad info_icon info_{6}\"></i><i class=\"fa fa-user-secret info_icon info_{7}\"></i></span></a>"
@@ -195,6 +138,9 @@ namespace backend {
                                                      "</div>"
                                                      "</div>";
 
+        std::string params_s = str::format("?q={0}&p={1}&e={2}&ek={3}", query, p_, e_, ek_);
+        ek_ = encryption::base64::easy_decode(ek_);
+
         if_debug_print(logger::type::info, "query = " + query, request.path);
 
         if (e_ == "1") {
@@ -209,10 +155,10 @@ namespace backend {
         }
 
         std::string center_results_src;
-        std::string params_s = str::format("?q={0}&s={1}&e=0", str::replace(query, " ", "+"), s_);
 
         for (const auto &node : config.nodes) {
             if_debug_print(logger::type::info, "node = " + node.url, request.path);
+            std::string params_s2;
 
             if (e_ == "1") {
                 encryption::rsa rsa_node;
@@ -227,10 +173,10 @@ namespace backend {
 
                 auto public_key = rsa.get_public_key_buffer();
                 auto key2 = encryption::base64::easy_encode(public_key); //error of curl (CURLE_URL_MALFORMAT)
-                params_s = str::format("?q={0}&s={1}&e=1&ek={2}", encrypted_base64, s_, key2);
+                params_s2 = str::format("?q={0}&p={1}&e=1&ek={2}", encrypted_base64, p_, key2);
             }
 
-            http::request request_(node.url + "/api/search" + params_s);
+            http::request request_(node.url + "/api/search" + params_s2);
             if (!http::url(node.url).is_localhost()) request_.options.proxy = config.proxy;
             request_.perform();
 
@@ -308,15 +254,15 @@ namespace backend {
         std::string url = request.path + params_s;
         str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src2);
         str::replace_ref(page_src, "{QUERY}", query);
-        str::replace_ref(page_src, "{PREV_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string((start_index >= 10) ? start_index - 10 : 0)));
-        str::replace_ref(page_src, "{NEXT_PAGE}", str::replace(url, "&s=" + s_, "&s=" + std::to_string(start_index + 10)));
+        str::replace_ref(page_src, "{PREV_PAGE}", str::replace(url, "&p=" + p_, "&p=" + std::to_string((page > 1) ? page - 1 : 1)));
+        str::replace_ref(page_src, "{NEXT_PAGE}", str::replace(url, "&p=" + p_, "&p=" + std::to_string(page + 1)));
 
         set_variables(page_src);
         response.status = 200;
         response.set_content(page_src, "text/html");
     }
     void pages::node_info(const Request &request, Response &response) {
-        std::string page_src = config::helper::get_file_content("../../frontend/src/node/info.html");
+        std::string page_src = config::helper::get_file_content("../frontend/src/node/info.html");
 
         str::replace_ref(page_src, "{WEBSITES_COUNT}", std::to_string(get_field_count("host")));
         str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
@@ -326,7 +272,7 @@ namespace backend {
         response.set_content(page_src, "text/html");
     }
     void pages::node_admin_panel(const Request &request, Response &response) {
-        std::string page_src = config::helper::get_file_content("../../frontend/src/node/admin_panel/index.html");
+        std::string page_src = config::helper::get_file_content("../frontend/src/node/admin_panel/index.html");
 
         set_variables(page_src);
         response.status = 200;
@@ -378,8 +324,8 @@ namespace backend {
         std::string query = str::replace(request.get_param_value("q"), " ", "+");
         std::string e_ = request.get_param_value("e");
         std::string ek_ = request.get_param_value("ek");
-        const std::string s_ = request.get_param_value("s");
-        const size_t start_index = (!s_.empty()) ? std::stoi(s_) : 0;
+        const std::string p_ = request.get_param_value("p");
+        const size_t page = (!p_.empty()) ? std::stoi(p_) : 1;
         nlohmann::json page_src;
         std::vector<unsigned char> ek_decrypted;
 
@@ -395,7 +341,7 @@ namespace backend {
             if_debug_print(logger::type::info, "decrypted query = " + query, request.path);
         }
 
-        const auto search_results = search(query, start_index);
+        const auto search_results = search(query, page);
 
         if (search_results) {
             auto sr_size = search_results->size();
@@ -464,7 +410,7 @@ namespace backend {
     void pages::api_node_info(const Request &request, Response &response) {
         nlohmann::json page_src;
 
-        page_src["websites_count"] = get_field_count("host");
+        //page_src["websites_count"] = get_field_count("host");
         page_src["pages_count"] = get_field_count("url");
 
         response.status = 200;

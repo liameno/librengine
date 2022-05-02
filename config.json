@@ -1,10 +1,11 @@
 //proxy: type://ip:port
 //socks5://127.0.0.1:9050
 
+//_s - seconds
+
 {
   "crawler": {
     "user_agent": "librengine",
-    "opensearch_url": "http://localhost:9200",
     "proxy": "socks5://127.0.0.1:9050",
     "load_page_timeout_s": 20,
     "update_time_site_info_s_after": 86400, //10 days
@@ -29,5 +30,10 @@
         "url": "http://127.0.0.1:8080"
       }
     ]
+  },
+  //edit also init_db.sh
+  "db": {
+    "url": "http://localhost:8108",
+    "api_key": "xyz"
   }
 }

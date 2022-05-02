@@ -164,6 +164,8 @@ namespace librengine::http {
         this->curl = curl_easy_init();
         this->options.headers = std::make_shared<std::vector<header>>();
 
+        this->url = str::replace(this->url, " ", "%20");
+
         if (is_set_secure_headers) {
             this->options.headers->emplace_back("DNT", "1"); //don't track
             this->options.headers->emplace_back("Sec-GPC", "1"); //don't sell or share

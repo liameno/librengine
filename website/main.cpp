@@ -11,20 +11,22 @@ int main(int argc, char **argv) {
     }
 
     config::website config;
+    config::db db;
+
     config.load_from_file(argv[1]);
+    db.load_from_file(argv[1]);
+
     std::string line = std::string(25, '=');
 
     std::cout   << logger::white << line << logger::green << "CFG" << logger::white << line << std::endl
                 << logger::reset << config.to_str()  << std::endl
                 << logger::white << line << "===" << logger::white << line << std::endl;
 
-    auto client = librengine::opensearch::client("http://localhost:9200");
-
     auto server = std::make_shared<Server>();
-    auto pages = std::make_shared<backend::pages>(config, client);
+    auto pages = std::make_shared<backend::pages>(config, db);
 
     std::thread server_thread([&] {
-        server->set_mount_point("/", "../../frontend/");
+        server->set_mount_point("/", "../frontend/");
         server->Get("/home", [&](const Request &req, Response &res) { pages->home(req, res); });
         server->Get("/search", [&](const Request &req, Response &res) { pages->search(req, res); });
         server->Get("/node/info", [&](const Request &req, Response &res) { pages->node_info(req, res); });

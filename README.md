@@ -1,18 +1,17 @@
 # Librengine
 
-![GitHub top language](https://img.shields.io/github/languages/top/liameno/librengine) ![GitHub](https://img.shields.io/github/license/liameno/librengine)
-
-Privacy Opensource Web Search Engine
+Privacy Web Search Engine
 ## Website
 [![https://raw.githubusercontent.com/liameno/librengine/master/preview.gif](https://raw.githubusercontent.com/liameno/librengine/master/demo.png)]()
 ## Donate to web-hosting
-| Cryptocurrency | Address |
+| Сurrency | Address |
 | --- | --- |
 | Bitcoin (BTC) | bc1qxpu9vfzah3vw5pzanny0zmfsgd64klcj24pa8x |
 | Dogecoin (DOGE) | DM8cqzbrW2rrmGk4K6UCD7rfeoqnKjJTum |
 | Ethereum (ETH)| 0x1857A1A7a543ED123151ACCAbBF4EB058741e614 |
 | Litecoin (LTC) | LLQMiWpF1cxET7p7UMYoWjJ26JuTp14u8K |
 | Monero (XMR) | 4AkPUBr4uoFV1K4fSitpGJjRHo4dfSzZ257YR9HxiQi3DvmgLW1rteRQfRRCFYytKugcygfHAvvJu3Tt96mSoVUE6JKJDZL |
+
 ## Features
 -  Crawler
 	-  Proxy
@@ -31,19 +30,20 @@ Privacy Opensource Web Search Engine
 ## Dependencies
 - libcurl 	(https://github.com/curl/curl)
 - lexbor	(https://github.com/lexbor/lexbor)
-- opensearch	(https://www.opensearch.org/)
-- openssl 	(https://www.openssl.org/)
+- typesense	(https://typesense.org)
+- openssl 	(https://www.openssl.org)
 
 Arch: 
 ```shell
-yay -S curl lexbor opensearch openssl
+yay -S curl lexbor openssl &&
+wget https://dl.typesense.org/releases/0.22.2/typesense-server-0.22.2-linux-amd64.tar.gz &&
+tar -zxf typesense-server-0.22.2-linux-amd64.tar.gz
 ```
 Debian: 
 ```shell
 sudo apt install libcurl4-openssl-dev &&
-wget https://artifacts.opensearch.org/releases/bundle/opensearch/1.2.4/opensearch-1.2.4-linux-x64.tar.gz &&
-tar -zxf opensearch-1.2.4-linux-x64.tar.gz && cd opensearch-1.2.4 && 
-./opensearch-tar-install.sh &&
+wget https://dl.typesense.org/releases/0.22.2/typesense-server-0.22.2-linux-amd64.tar.gz &&
+tar -zxf typesense-server-0.22.2-linux-amd64.tar.gz &&
 git clone https://github.com/lexbor/lexbor && 
 cd lexbor &&
 cmake . && make && sudo make install &&
@@ -51,23 +51,23 @@ sudo apt install libssl-dev
 ```
 ## Build
 ```shell
-git clone https://github.com/liameno/librengine
-cd librengine
+git clone https://github.com/liameno/librengine &&
+cd librengine &&
 sh scripts/build_all.sh
 ```
 ## Run
 ```shell
-opensearch
-sh scripts/set_opensearch.sh
+./typesense-server --data-dir=/tmp/typesense-data --api-key=xyz --enable-cors &&
+sh scripts/init_db.sh
 ```
 #### Crawler
 ```shell
 ./crawler https://www.gnu.org ../../config.json
 #[start_site] [config path]
 ```
-#### Backend
+#### Website
 ```shell
-./backend ../../config.json
+./website ../../config.json
 #[config path]
 ```
 ## Config 
@@ -75,10 +75,11 @@ sh scripts/set_opensearch.sh
 //proxy: type://ip:port
 //socks5://127.0.0.1:9050
 
+//_s - seconds
+
 {
   "crawler": {
     "user_agent": "librengine",
-    "opensearch_url": "http://localhost:9200",
     "proxy": "socks5://127.0.0.1:9050",
     "load_page_timeout_s": 20,
     "update_time_site_info_s_after": 86400, //10 days
@@ -103,15 +104,13 @@ sh scripts/set_opensearch.sh
         "url": "http://127.0.0.1:8080"
       }
     ]
+  },
+  //edit also init_db.sh
+  "db": {
+    "url": "http://localhost:8108",
+    "api_key": "xyz"
   }
 }
-```
-
-#### OpenSearch: Permissions Denied
-
-```shell
-sudo chmod -R 777 /usr/share/opensearch/config
-sudo chmod -R 777 /usr/share/opensearch/logs
 ```
 
 ## License
