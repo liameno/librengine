@@ -1,6 +1,5 @@
-# Librengine
-
-Privacy Web Search Engine
+# [![](https://raw.githubusercontent.com/liameno/librengine/master/logo.png) 
+#### Privacy Web Search Engine
 ## Website
 [![https://raw.githubusercontent.com/liameno/librengine/master/preview.gif](https://raw.githubusercontent.com/liameno/librengine/master/demo.png)]()
 ## Donate to web-hosting
