@@ -114,4 +114,4 @@ sh scripts/init_db.sh
 ```
 
 ## License
-GNU General Public License v3.0
+GNU AFFERO GENERAL PUBLIC LICENSE v3.0
