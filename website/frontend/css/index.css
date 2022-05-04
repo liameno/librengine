@@ -40,49 +40,13 @@
     width: 100%;
 }
 
-.checkboxes {
-    display: flex;
-    flex-flow: column wrap;
-    align-self: center;
-    width: 100%;
-    margin-top: 5%;
-    background: var(--black_transparent2);
-}
-
-.content_checkboxes {
-    margin: 14px;
-}
-
-.checkbox ~ label {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    background-color: var(--dark_light);
-    text-align: left;
-    font-size: 14px;
-    margin-top: 4px;
-    margin-bottom: 4px;
-    border-radius: 4px;
-    color: var(--white);
-    text-transform: uppercase;
-    transition: all 300ms linear;
-    display: inline-block;
-    width: 100%;
-}
-.checkbox ~ label > span {
-    margin-left: 5px;
-}
-
-.checkbox:checked ~ label {
-    background-color: var(--red);
-}
-
 .input {
     margin-left: 7px;
     position: relative;
     border: 0;
     width: 100%;
     height: 50px;
-    background-color: var(--dark);
+    background-color: var(--dark_light);
     color: var(--white);
     outline: none;
 }
@@ -94,7 +58,7 @@
     border-bottom-left-radius: 5px;
     border: 0;
     height: 50px;
-    background-color: var(--dark);
+    background-color: var(--dark_light);
     color: var(--white);
     outline: none;
 }
@@ -111,22 +75,14 @@
     cursor: pointer;
     height: 50px;
     width: 50px;
-    color: var(--white_dark);
-    background: var(--red);
+    color: var(--dark);
+    background: var(--green);
 }
 
 .button:hover {
-    background-color: var(--red_light);
+    background-color: var(--green2);
 }
 
 .button > i {
     margin-left: -3px;
-}
-
-[type="checkbox"] {
-    position: absolute;
-    left: -9999px;
-    width: 0;
-    height: 0;
-    visibility: hidden;
 }
