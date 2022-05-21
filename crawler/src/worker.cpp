@@ -3,14 +3,13 @@
 #include <lexbor/html/html.h>
 #include <optional>
 #include <thread>
-#include <utility>
 
 #include <librengine/http.h>
 #include <librengine/str.h>
 #include <librengine/logger.h>
+#include <librengine/helper.h>
 
-#include "../include/helper.h"
-#include "../third_party/rep-cpp/robots.h"
+#include "../../lib/include/helper.h"
 
 #define DEBUG true //TODO: FALSE
 
