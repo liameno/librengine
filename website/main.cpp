@@ -17,10 +17,9 @@ int main(int argc, char **argv) {
 
     std::thread server_thread([&] {
         server->set_mount_point("/", "../frontend/");
-        server->Get("/home", [&](const Request &req, Response &res) { pages->home(req, res); });
-        server->Get("/search", [&](const Request &req, Response &res) { pages->search(req, res); });
-        server->Get("/node/info", [&](const Request &req, Response &res) { pages->node_info(req, res); });
-        server->Get("/node/admin_panel", [&](const Request &req, Response &res) { pages->node_admin_panel(req, res); });
+        server->Get("/home", [&](const Request &req, Response &res) { pages->home_p(req, res); });
+        server->Get("/search", [&](const Request &req, Response &res) { pages->search_p(req, res); });
+        server->Get("/node/info", [&](const Request &req, Response &res) { pages->node_info_p(req, res); });
         server->Get("/api/get_rsa_public_key", [&](const Request &req, Response &res) { pages->api_get_rsa_public_key(req, res); });
         server->Get("/api/plus_rating", [&](const Request &req, Response &res) { pages->api_plus_rating(req, res); });
         server->Get("/api/minus_rating", [&](const Request &req, Response &res) { pages->api_minus_rating(req, res); });
@@ -36,7 +35,7 @@ int main(int argc, char **argv) {
 
     pages->init();
 
-    std::cout << "The server was started at http://127.0.0.1:" << config.website_.port << std::endl;
+    std::cout << "http://localhost:" << config.website_.port << "/" << std::endl;
     server_thread.join();
 
     return 0;
