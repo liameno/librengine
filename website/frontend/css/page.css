@@ -9,15 +9,14 @@
     --gray: #c4c4c4;
     --gray_dark: #ffffff1f;
     --gray_light_dark: #ffffff5f;
-    --green: #4eff5b;
     --red: #bb4430;
     --red2: #da2c4d;
     --red_light: #d0644f;
     --blue: #2dc3fd;
     --blue_dark: #2597c4;
     --black: #000000;
-    --black_transparent: rgba(0, 0, 0, 0.9);
-    --black_transparent2: rgba(0, 0, 0, 0.8);
+    --black_transparent: rgba(255, 255, 255, 0.1);
+    --black_transparent2: rgba(255, 255, 255, 0.2);
     --yellow: #f8ab37;
     --green: #7DE38D;
     --green2: #70c17c;
