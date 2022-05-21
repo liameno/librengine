@@ -78,21 +78,8 @@ namespace librengine {
         return results;
     }
 
-    std::vector<search_result> search::nodes(std::string &query, const size_t &page, const bool &is_encryption_enabled, const std::string &encryption_key) {
+    std::vector<search_result> search::nodes(std::string &query, const size_t &page, const bool &is_encryption_enabled) {
         std::string page_ = std::to_string(page);
-
-        if (encryption_key.find("END PUBLIC KEY") == -1) {
-            return {};
-        }
-
-        if (is_encryption_enabled) {
-            query = rsa.easy_private_decrypt(query);
-
-            if (query.empty()) {
-                return {};
-            }
-        }
-
         std::vector<search_result> results;
 
         for (const auto &node : config.global_.nodes) {

@@ -97,7 +97,21 @@ namespace website {
 
         encryption_key = encryption::base64::easy_decode(encryption_key);
 
-        auto results = search_->nodes(query, page, is_encryption_enabled, encryption_key);
+        if (encryption_key.find("END PUBLIC KEY") == -1) {
+            response.set_redirect("/", 500);
+            return;
+        }
+
+        if (is_encryption_enabled) {
+            query = search_->rsa.easy_private_decrypt(query);
+
+            if (query.empty()) {
+                response.set_redirect("/", 500);
+                return;
+            }
+        }
+
+        auto results = search_->nodes(query, page, is_encryption_enabled);
         auto size = results.size();
 
         std::string center_results_src;

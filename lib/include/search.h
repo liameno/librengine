@@ -29,7 +29,7 @@ namespace librengine {
         void remove_html_tags(std::string &html);
 
         std::vector<search_result> local(const std::string &q, const size_t &p);
-        std::vector<search_result> nodes(std::string &query, const size_t &page, const bool &is_encryption_enabled, const std::string &encryption_key);
+        std::vector<search_result> nodes(std::string &query, const size_t &page, const bool &is_encryption_enabled);
     };
 }
 
