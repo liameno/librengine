@@ -2,9 +2,9 @@
 #include <lexbor/html/html.h>
 #include <optional>
 
-#include <librengine/config.h>
-#include <librengine/typesense.h>
-#include <librengine/http.h>
+#include "config.h"
+#include "typesense.h"
+#include "http.h"
 
 #ifndef HELPER_H
 #define HELPER_H
