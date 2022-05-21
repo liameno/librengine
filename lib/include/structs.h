@@ -12,6 +12,7 @@ namespace librengine {
         size_t rating;
         bool has_ads;
         bool has_analytics;
+        std::string node_url;
     };
 }
 
