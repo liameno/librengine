@@ -51,6 +51,11 @@ mkdir /tmp/typesense-data &&
 ./typesense-server --data-dir=/tmp/typesense-data --api-key=xyz --enable-cors &&
 sh scripts/init_db.sh
 ```
+#### CLI
+```shell
+./cli gnu 1 ../../config.json
+#[query] [page] [config path]
+```
 #### Crawler
 ```shell
 ./crawler https://www.gnu.org ../../config.json
