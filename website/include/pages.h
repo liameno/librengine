@@ -8,10 +8,12 @@
 #include <librengine/http.h>
 #include <librengine/typesense.h>
 #include <librengine/encryption.h>
+#include <librengine/search.h>
 #include <iostream>
 #include <cstring>
 #include <thread>
 #include <fstream>
+#include <memory>
 #include <map>
 
 #include "../third_party/httplib.h"
@@ -26,10 +28,13 @@ namespace website {
     class pages {
     private:
         config::all config;
-        encryption::rsa rsa;
-        std::map<std::string, std::string> rsa_public_keys;
+        std::shared_ptr<search> search_;
+
+        std::string center_result_src_format;
     public:
-        pages(const config::all &config);
+        explicit pages(const config::all &config);
+        ~pages();
+
         void init();
     
         void set_variables(std::string &page_src);
@@ -37,13 +42,11 @@ namespace website {
         void update(const std::string &id, const std::string &field, const size_t &value);
         void update(const std::string &id, const std::string &field, const std::string &value);
         size_t get_number_field_value(const std::string &id, const std::string &field);
-        std::optional<std::vector<search_result>> search(const std::string &q, const size_t &p);
         size_t get_field_count(const std::string &field);
 
-        void home(const Request &request, Response &response);
-        void search(const Request &request, Response &response);
-        void node_info(const Request &request, Response &response);
-        void node_admin_panel(const Request &request, Response &response);
+        void home_p(const Request &request, Response &response);
+        void search_p(const Request &request, Response &response);
+        void node_info_p(const Request &request, Response &response);
         void api_get_rsa_public_key(const Request &request, Response &response);
         void api_plus_rating(const Request &request, Response &response);
         void api_minus_rating(const Request &request, Response &response);
