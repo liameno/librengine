@@ -21,13 +21,16 @@ namespace librengine::config {
             std::string url;
         };
 
+        size_t rsa_key_length;
+        size_t max_title_show_size;
+        size_t max_desc_show_size;
+
         std::vector<node_s> nodes;
 
         void load_from_file(const std::string &path);
     };
     struct crawler {
         std::string user_agent;
-        std::string start_site_url;
 
         std::optional<http::proxy> proxy;
 
@@ -35,12 +38,12 @@ namespace librengine::config {
         size_t update_time_site_info_s_after;
         size_t delay_time_s;
 
-        size_t max_recursive_deep;
         size_t max_pages_site;
         size_t max_page_symbols;
         size_t max_robots_txt_symbols;
+        size_t max_lru_cache_size_host;
+        size_t max_lru_cache_size_url;
 
-        bool is_one_site;
         bool is_http_to_https;
         bool is_check_robots_txt;
 

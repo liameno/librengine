@@ -9,7 +9,7 @@
 #ifndef HELPER_H
 #define HELPER_H
 
-namespace helper {
+namespace librengine::helper {
     size_t compute_time();
 
     std::optional<std::string> lxb_string_to_std(const lxb_char_t *s);

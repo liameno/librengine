@@ -98,54 +98,100 @@ namespace librengine::http {
         curl_url_cleanup(current_curl_url);
     }
 
+    std::string url::escape(const std::string &s) {
+        CURL *curl = curl_easy_init();
+        char *output = curl_easy_escape(curl, s.c_str(), s.size());
+        std::string result = output;
+
+        curl_free(output);
+        curl_easy_cleanup(curl);
+
+        return result;
+    }
+
     void url::parse() {
         //https://curl.se/libcurl/c/parseurl.html
-        char *v;
         curl_url_set(current_curl_url, CURLUPART_URL, text.c_str(), 0/*CURLU_DEFAULT_SCHEME*/);
 
-        auto c = curl_url_get(current_curl_url, CURLUPART_SCHEME, &v, 0);
-        if (!c) this->scheme = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_USER, &v, 0);
-        if (!c) this->user = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_PASSWORD, &v, 0);
-        if (!c) this->password = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_OPTIONS, &v, 0);
-        if (!c) this->options = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_HOST, &v, 0);
-        if (!c) this->host = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_ZONEID, &v, 0);
-        if (!c) this->zone_id = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_PATH, &v, 0);
-        if (!c) this->path = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_QUERY, &v, 0);
-        if (!c) this->query = v;
-        curl_free(v);
-        c = curl_url_get(current_curl_url, CURLUPART_FRAGMENT, &v, 0);
-        if (!c) this->fragment = v;
-        curl_free(v);
+        char *scheme;
+        char *user;
+        char *password;
+        char *options;
+        char *host;
+        char *zone_id;
+        char *path;
+        char *query;
+        char *fragment;
+
+        auto c = curl_url_get(current_curl_url, CURLUPART_SCHEME, &scheme, 0);
+        if (!c) {
+            this->scheme = scheme;
+            curl_free(scheme);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_USER, &user, 0);
+        if (!c) {
+            this->user = user;
+            curl_free(user);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_PASSWORD, &password, 0);
+        if (!c) {
+            this->password = password;
+            curl_free(password);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_OPTIONS, &options, 0);
+        if (!c) {
+            this->options = options;
+            curl_free(options);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_HOST, &host, 0);
+        if (!c) {
+            this->host = host;
+            curl_free(host);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_ZONEID, &zone_id, 0);
+        if (!c) {
+            this->zone_id = zone_id;
+            curl_free(zone_id);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_PATH, &path, 0);
+        if (!c) {
+            this->path = path;
+            curl_free(path);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_QUERY, &query, 0);
+        if (!c) {
+            this->query = query;
+            curl_free(query);
+        }
+
+        c = curl_url_get(current_curl_url, CURLUPART_FRAGMENT, &fragment, 0);
+        if (!c) {
+            this->fragment = fragment;
+            curl_free(fragment);
+        }
 
         compute_text();
     }
     void url::compute_text() {
-        char *v;
-        auto c = curl_url_get(current_curl_url, CURLUPART_URL, &v, 0);
+        char *url;
+        auto c = curl_url_get(current_curl_url, CURLUPART_URL, &url, 0);
 
         if (!c) {
-            this->text = v;
+            this->text = url;
 
             if (str::get_last_char(this->text) == '#') {
                 str::remove_last_char(this->text);
             }
-        }
 
-        curl_free(v);
+            curl_free(url);
+        }
     }
 
     void url::set(const CURLUPart &what, const std::string &value) {

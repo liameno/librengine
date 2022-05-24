@@ -3,7 +3,7 @@ project(librengine LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(include include/encryption.h include/typesense.h include/http.h include/str.h include/str_impl.h include/config.h include/logger.h include/json.hpp include/structs.h include/search.h include/helper.h)
+set(include include/encryption.h include/typesense.h include/http.h include/str.h include/str_impl.h include/config.h include/logger.h include/json.hpp include/structs.h include/search.h include/helper.h include/cache.h)
 set(src src/encryption.cpp src/typesense.cpp src/http.cpp src/str.cpp src/logger.cpp src/config.cpp src/search.cpp src/helper.cpp)
 
 set(include_all ${include})

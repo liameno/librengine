@@ -3,18 +3,12 @@
 #include <lexbor/html/html.h>
 #include <regex>
 
-//      TODO: CONFIG        //
-#define RSA_KEY_LENGTH      1024
-#define TITLE_MAX_SIZE      55
-#define DESC_MAX_SIZE       350
-//      ============        //
-
 namespace librengine {
     search::search(const config::all &config) {
         this->config = config;
 
         this->rsa = encryption::rsa();
-        this->rsa.generate_keys(RSA_KEY_LENGTH);
+        this->rsa.generate_keys(config.global_.rsa_key_length);
 
         this->rsa_public_key = rsa.get_public_key_buffer();
         this->rsa_public_key_base64 = encryption::base64::easy_encode(rsa_public_key);
@@ -29,7 +23,6 @@ namespace librengine {
             rsa_public_keys.insert({node.url, request_.result.response.value_or("")});
         }
     }
-
 
     void search::remove_html_tags(std::string &html) {
         std::regex regex(R"(<\/?(\w+)(\s+\w+=(\w+|"[^"]*"|'[^']*'))*(( |)\/|)>)"); //<[^<>]+>
@@ -59,15 +52,14 @@ namespace librengine {
                 result.url = hit_doc["url"];
                 result.desc = hit_doc["desc"];
                 result.rating = hit_doc["rating"];
-                result.has_ads = hit_doc["has_ads"];
-                result.has_analytics = hit_doc["has_analytics"];
-                result.node_url = "http://localhost";
+                result.has_trackers = hit_doc["has_trackers"];
+                result.node_url = "http://localhost:" + std::to_string(config.website_.port);
 
                 remove_html_tags(result.title);
                 remove_html_tags(result.desc);
 
-                if (result.title.length() > TITLE_MAX_SIZE) result.title = result.title.substr(0, TITLE_MAX_SIZE - 3) + "...";
-                if (result.desc.length() > DESC_MAX_SIZE) result.desc = result.desc.substr(0, DESC_MAX_SIZE - 3) + "...";
+                if (result.title.length() > config.global_.max_title_show_size) result.title = result.title.substr(0, config.global_.max_title_show_size - 3) + "...";
+                if (result.desc.length() > config.global_.max_desc_show_size) result.desc = result.desc.substr(0, config.global_.max_desc_show_size - 3) + "...";
             } catch (const nlohmann::json::exception &e) {
                 continue;
             }
@@ -133,8 +125,7 @@ namespace librengine {
                 result.url = result_json["url"];
                 result.desc = result_json["desc"];
                 result.rating = result_json["rating"];
-                result.has_ads = result_json["has_ads"];
-                result.has_analytics = result_json["has_analytics"];
+                result.has_trackers = result_json["has_trackers"];
                 result.node_url = node.url;
 
                 results.push_back(result);

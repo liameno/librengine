@@ -13,8 +13,7 @@ curl -XPOST "$URL/collections/" -d'
       {"name": "url", "type": "string" },
       {"name": "host", "type": "string" },
       {"name": "rating", "type": "int32" },
-      {"name": "has_ads", "type": "bool" },
-      {"name": "has_analytics", "type": "bool" },
+      {"name": "has_trackers", "type": "bool" },
       {"name": "date", "type": "int64" }
     ],
     "default_sorting_field": "date"

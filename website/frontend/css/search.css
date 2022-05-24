@@ -2,6 +2,14 @@
     height: auto;
 }
 
+.results {
+    position: relative;
+    display: flex;
+    flex-flow: column wrap;
+    align-self: center;
+    width: 100%;
+}
+
 .rating_container {
     display: flex;
     justify-content: right;

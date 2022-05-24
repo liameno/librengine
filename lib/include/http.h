@@ -60,10 +60,12 @@ namespace librengine::http {
         std::optional<std::string> query;
         std::optional<std::string> fragment;
     private:
-        Curl_URL *current_curl_url;
+        CURLU *current_curl_url;
     public:
         explicit url(std::string text);
         ~url();
+
+        static std::string escape(const std::string &s);
 
         void parse();
         void compute_text();

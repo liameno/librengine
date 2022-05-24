@@ -23,6 +23,10 @@ namespace librengine::config {
         for (auto node : nodes) {
             this->nodes.push_back(node_s{node["name"], node["url"]});
         }
+
+        rsa_key_length = json_global["rsa_key_length"].get<size_t>();
+        max_title_show_size = json_global["max_title_show_size"].get<size_t>();
+        max_desc_show_size = json_global["max_desc_show_size"].get<size_t>();
     }
 
     void crawler::load_from_file(const std::string &path) {
@@ -34,18 +38,16 @@ namespace librengine::config {
 
         std::string proxy_string = json_crawler["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) {
-            proxy = http::proxy{proxy_string};
-        }
+        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
 
         load_page_timeout_s = json_crawler["load_page_timeout_s"].get<size_t>();
         update_time_site_info_s_after = json_crawler["update_time_site_info_s_after"].get<size_t>();
         delay_time_s = json_crawler["delay_time_s"].get<size_t>();
-        max_recursive_deep = json_crawler["max_recursive_deep"].get<size_t>();
         max_pages_site = json_crawler["max_pages_site"].get<size_t>();
         max_page_symbols = json_crawler["max_page_symbols"].get<size_t>();
         max_robots_txt_symbols = json_crawler["max_robots_txt_symbols"].get<size_t>();
-        is_one_site = json_crawler["is_one_site"].get<bool>();
+        max_lru_cache_size_host = json_crawler["max_lru_cache_size_host"].get<size_t>();
+        max_lru_cache_size_url = json_crawler["max_lru_cache_size_url"].get<size_t>();
         is_http_to_https = json_crawler["is_http_to_https"].get<bool>();
         is_check_robots_txt = json_crawler["is_check_robots_txt"].get<bool>();
     }
@@ -57,9 +59,7 @@ namespace librengine::config {
 
         std::string proxy_string = json_cli["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) {
-            proxy = http::proxy{proxy_string};
-        }
+        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
     }
 
     void website::load_from_file(const std::string &path) {
@@ -71,9 +71,7 @@ namespace librengine::config {
 
         std::string proxy_string = json_website["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) {
-            proxy = http::proxy{proxy_string};
-        }
+        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
     }
 
     void db::load_from_file(const std::string &path) {

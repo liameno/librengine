@@ -10,8 +10,7 @@ namespace librengine {
         std::string url;
         std::string desc;
         size_t rating;
-        bool has_ads;
-        bool has_analytics;
+        bool has_trackers;
         std::string node_url;
     };
 }

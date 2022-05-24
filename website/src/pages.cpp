@@ -21,7 +21,7 @@ namespace website {
 
         this->center_result_src_format =   "<div class=\"center_result\">"
                                             "<div class=\"content\">"
-                                            "<a class=\"title\" href=\"{1}\">{0}<span><i class=\"fa fa-ad info_icon info_{6}\"></i><i class=\"fa fa-user-secret info_icon info_{7}\"></i></span></a>"
+                                            "<a class=\"title\" href=\"{1}\">{0}<span><i class=\"fa fa-user-secret info_icon info_{6}\"></i></span></a>"
                                             "<div class=\"url\">{1}</div>"
                                             "<div class=\"description\">{2}</div>"
                                             "</div>"
@@ -95,6 +95,7 @@ namespace website {
         std::string encryption_key = request.get_param_value("ek");
         size_t page = (!page_.empty()) ? std::stoi(page_) : 1;
 
+        std::string url_params = str::format("?q={0}&p={1}&e={2}&ek={3}", query, page_, is_encryption_enabled_, encryption_key);
         encryption_key = encryption::base64::easy_decode(encryption_key);
 
         if (encryption_key.find("END PUBLIC KEY") == -1) {
@@ -124,11 +125,10 @@ namespace website {
             const auto &url = result.url;
             const auto &desc = result.desc;
             const auto &rating = result.rating;
-            const auto &has_ads = result.has_ads ? "bad" : "good";
-            const auto &has_analytics = result.has_analytics ? "bad" : "good";
+            const auto &has_trackers = result.has_trackers ? "bad" : "good";
             const auto &node_url = result.node_url;
 
-            std::string result_src = str::format(center_result_src_format, title, url, desc, rating, id, node_url, has_ads, has_analytics);
+            std::string result_src = str::format(center_result_src_format, title, url, desc, rating, id, node_url, has_trackers);
             center_results_src.append(result_src);
         }
 
@@ -145,7 +145,6 @@ namespace website {
             }
         }
 
-        std::string url_params = str::format("?q={0}&p={1}&e={2}&ek={3}", query, page_, is_encryption_enabled_, encryption_key);
         std::string url = request.path + url_params;
 
         str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src);
@@ -243,8 +242,7 @@ namespace website {
             page_src["results"][i]["desc"] = result.desc;
             page_src["results"][i]["rating"] = result.rating;
             page_src["results"][i]["id"] = result.id;
-            page_src["results"][i]["has_ads"] = result.has_ads;
-            page_src["results"][i]["has_analytics"] = result.has_analytics;
+            page_src["results"][i]["has_trackers"] = result.has_trackers;
         }
 
         page_src["count"] = search_results.size();

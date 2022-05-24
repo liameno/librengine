@@ -4,9 +4,7 @@
 #include <optional>
 #include <thread>
 
-namespace helper {
-    using namespace librengine;
-
+namespace librengine::helper {
     size_t compute_time() {
         return time(nullptr);
     }

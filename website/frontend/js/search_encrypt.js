@@ -36,7 +36,7 @@ function submit_form() {
     let query_v = query.value;
     let key_v = key.value;
 
-    let rsa2 = new JSEncrypt({default_key_size: 1024});
+    let rsa2 = new JSEncrypt();
     rsa2.setPublicKey(atob(key_v));
 
     let encrypted = rsa2.encrypt(query_v);
