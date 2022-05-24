@@ -9,7 +9,7 @@ namespace librengine {
     }
 
     std::string typesense::add(const std::string &json) {
-        std::string request_url = this->url + "/collections/" + this->collection_name + "/documents/";
+        std::string request_url = this->url + "/collections/" + this->collection_name + "/documents";
         http::request request(request_url, json, "POST", false);
         request.options.headers->emplace_back("Content-Type: application/json");
         request.options.headers->emplace_back("X-TYPESENSE-API-KEY", api_key);
@@ -38,7 +38,7 @@ namespace librengine {
     }
 
     std::string typesense::search(const std::string &q, const std::string &query_by, const std::map<std::string, std::string> &options) {
-        std::string request_url = this->url + "/collections/" + this->collection_name + "/documents/search";
+        std::string request_url = this->url + "/collections/" + this->collection_name + "/documents/search/";
         request_url.append("?q=" + q);
         request_url.append("&query_by=" + query_by);
 
