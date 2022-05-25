@@ -1,7 +1,4 @@
-## librengine
-
 ### Features
-
 #### Crawler
 - Cache
 - Robots.txt
@@ -11,7 +8,6 @@
 - Detect trackers
 - Http to https
 - Normalize url (remove #fragment, ?query)
-
 #### Website / CLI
 - Encryption (rsa)
 - API
