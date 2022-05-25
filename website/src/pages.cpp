@@ -246,8 +246,15 @@ namespace website {
         }
 
         page_src["count"] = search_results.size();
+        std::string result;
 
-        std::string result = page_src.dump();
+        try {
+            result = page_src.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+        } catch (const std::exception& e) {
+            if_debug_print(logger::type::error, e.what(), request.path);
+            response.set_redirect("/", 500);
+            return;
+        }
 
         if (is_encryption_enabled) {
             encryption::rsa request_rsa;
