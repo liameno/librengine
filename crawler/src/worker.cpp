@@ -10,10 +10,10 @@
 #include <librengine/logger.h>
 #include <librengine/helper.h>
 #include <librengine/cache.h>
+#include <librengine/robots_txt.h>
 
 #include "../include/json_generator.h"
 #include "../include/html_helper.h"
-#include "../third_party/rep-cpp/robots.h"
 
 #define DEBUG true //TODO: FALSE
 
@@ -82,8 +82,10 @@ std::optional<std::string> worker::get_robots_txt(const http::url &url) {
     return request.result.response;
 }
 
-bool worker::is_allowed_in_robots(const std::string &body, const std::string &url) {
-    Rep::Robots robots = Rep::Robots(body);
+bool worker::is_allowed_in_robots(const std::string &body, const http::url &url) {
+    robots_txt robots(body);
+    robots.parse();
+
     return robots.allowed(url, config.crawler_.user_agent);
 }
 bool worker::normalize_url(http::url &url, const std::optional<std::string> &owner_host) const {
@@ -260,7 +262,8 @@ worker::result worker::work(url &url_) {
             }
         }
 
-        if (is_checked && !is_allowed_in_robots(robots_txt_body, url.text)) {
+        if (is_checked && !is_allowed_in_robots(robots_txt_body, url)) {
+            if_debug_print(logger::type::error, "disallowed robots.txt", url.text);
             return result::disallowed_robots;
         }
     }

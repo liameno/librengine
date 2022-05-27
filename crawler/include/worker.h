@@ -41,7 +41,7 @@ public:
     librengine::http::request::result_s site(const librengine::http::url &url);
     std::optional<std::string> get_robots_txt(const librengine::http::url &url);
 
-    bool is_allowed_in_robots(const std::string &body, const std::string &url);
+    bool is_allowed_in_robots(const std::string &body, const http::url &url);
     bool normalize_url(librengine::http::url &url, const std::optional<std::string> &owner_host = std::nullopt) const;
 public:
     explicit worker(const librengine::config::all &config);

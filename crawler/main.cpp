@@ -2,8 +2,6 @@
 
 #include "include/worker.h"
 
-using namespace librengine;
-
 int main(int argc, char **argv) {
     using namespace librengine;
 
