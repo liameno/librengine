@@ -24,6 +24,7 @@
 
 ## TODO
 - [x] Encryption (assymetric)
+- [ ] Multithreading crawler
 - [ ] Robots Rules (from headers & html) & crawl-delay
 - [ ] Images Crawler
 - [ ] Adaptive Website
