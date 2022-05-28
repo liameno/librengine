@@ -64,8 +64,8 @@ sh scripts/init_db.sh
 ```
 #### Crawler
 ```shell
-./crawler https://www.gnu.org ../../config.json
-#[start_site] [config path]
+./crawler ../../sites.txt ../../config.json
+#[sites_path] [config path]
 ```
 #### Website
 ```shell

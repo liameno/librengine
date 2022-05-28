@@ -82,7 +82,7 @@ std::optional<std::string> worker::get_robots_txt(const http::url &url) {
     return request.result.response;
 }
 
-bool worker::is_allowed_in_robots(const std::string &body, const http::url &url) {
+bool worker::is_allowed_in_robots(const std::string &body, const http::url &url) const {
     robots_txt robots(body);
     robots.parse();
 
