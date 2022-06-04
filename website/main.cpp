@@ -15,22 +15,6 @@ int main(int argc, char **argv) {
     auto server = std::make_shared<Server>();
     auto pages = std::make_shared<website::pages>(config);
 
-    nlohmann::json a;
-    a["results"][0]["title"] = std::string("捐款 | LibreOffice 正體中文站 - 自由的辦�...");
-    a["results"][0]["url"] = "https://zh-tw.libreoffice.org/donate/";
-    a["results"][0]["desc"] = "Donate, donation, donations, funding, help, support, LibreOffice";
-    a["results"][0]["rating"] = "100";
-    a["results"][0]["id"] = "9";
-    a["results"][0]["has_trackers"] = "0";
-    a["results"][1]["title"] = std::string("Qu'est-ce que LibreOffice | Communauté LibreOffice ...");
-    a["results"][1]["url"] = "https://fr.libreoffice.org/discover/libreoffice/";
-    a["results"][1]["desc"] = "LibreOffice, Free Office Suite, Fun Project, Fantastic People, Writer, Calc, Impress, Draw, Base, Charts, Diagrams, extensions, templates, word processor, text editor, spreadsheet, presentation, database, documents, Document Foundation";
-    a["results"][1]["rating"] = "100";
-    a["results"][1]["id"] = "6";
-    a["results"][1]["has_trackers"] = "0";
-    std::cout << a.dump();
-    //return 0;
-
     std::thread server_thread([&] {
         server->set_mount_point("/", "../frontend/");
         server->Get("/home", [&](const Request &req, Response &res) { pages->home_p(req, res); });

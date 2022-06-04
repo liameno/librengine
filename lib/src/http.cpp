@@ -27,11 +27,11 @@ namespace librengine::http {
         set_full(full);
     }
     proxy::proxy(const std::string &full, const proxy_type &type) {
-        auto split = str::split(full, ":");
+        auto splited = split(full, ":");
 
-        if (split.size() > 1) {
-            this->ip = split[0];
-            this->port = split[1];
+        if (splited.size() > 1) {
+            this->ip = splited[0];
+            this->port = splited[1];
         }
 
         this->type = type;
@@ -42,7 +42,7 @@ namespace librengine::http {
         std::string result;
 
         if (full.empty()) return {};
-        if (str::starts_with(full, "http") || str::starts_with(full, "socks")) return full;
+        if (starts_with(full, "http") || starts_with(full, "socks")) return full;
 
         switch (type) {
             case proxy_type::http:
@@ -70,12 +70,12 @@ namespace librengine::http {
             this->full.append(": ");
             this->full.append(this->value);
         } else {
-            const auto splited = str::split(full, ":");
+            const auto splited = split(full, ":");
 
             if (splited.size() > 1) {
                 this->name = splited[0];
                 this->value = splited[1];
-                str::remove_first_char(this->value);
+                remove_first(this->value);
             }
 
             this->full = full;
@@ -186,8 +186,8 @@ namespace librengine::http {
         if (!c) {
             this->text = url;
 
-            if (str::get_last_char(this->text) == '#') {
-                str::remove_last_char(this->text);
+            if (get_last(this->text) == '#') {
+                remove_last(this->text);
             }
 
             curl_free(url);
@@ -210,7 +210,7 @@ namespace librengine::http {
         this->curl = curl_easy_init();
         this->options.headers = std::make_shared<std::vector<header>>();
 
-        this->url = str::replace(this->url, " ", "%20");
+        this->url = replace_copy(this->url, " ", "%20");
 
         if (is_set_secure_headers) {
             this->options.headers->emplace_back("DNT", "1"); //don't track

@@ -11,10 +11,10 @@ namespace librengine::helper {
 
     std::optional<std::string> lxb_string_to_std(const lxb_char_t *s) {
         if (s == nullptr) return std::nullopt;
-        return reinterpret_cast<const char *>(s);
+        return (const char *)s;
     }
     lxb_char_t *std_string_to_lxb(const std::string &s) {
-        return (lxb_char_t *) s.c_str();
+        return (lxb_char_t *)s.c_str();
     }
 
     std::optional<lxb_html_document*> parse_html(const std::string &response) {

@@ -1,7 +1,7 @@
-![](https://raw.githubusercontent.com/liameno/librengine/master/logo.png)
+![](images/logo.png)
 #### Privacy Web Search Engine
 ## Website
-[![demo](https://raw.githubusercontent.com/liameno/librengine/master/demo.png)]()
+![](images/demo.png)
 
 ## Features
 #### Crawler
@@ -12,15 +12,14 @@
 - Queue (BFS)
 - Detect trackers
 - Http to https
-- Normalize url (remove #fragment, ?query)
+- Normalize url
 
 #### Website / CLI
 - Encryption (rsa)
 - API
 - Proxy
-- Node Info
 - Nodes
-- Rating (min=0, max=200, def=100)
+- Rating
 
 ## TODO
 - [x] Encryption (assymetric)
@@ -35,26 +34,16 @@
 - typesense ([source](https://github.com/typesense/typesense))
 - openssl   ([source](https://github.com/openssl/openssl))
 
-Arch: 
+#### Arch
 ```shell
-yay -S curl lexbor openssl &&
-curl -O https://dl.typesense.org/releases/0.23.0.rc20/typesense-server-0.23.0.rc20-linux-amd64.tar.gz &&
-tar -xzf typesense-server-0.23.0.rc20-linux-amd64.tar.gz
+sh scripts/install_dependencies_arch.sh
 ```
-Debian: 
+#### Debian
 ```shell
-sudo apt install libcurl4-openssl-dev &&
-curl -O https://dl.typesense.org/releases/0.23.0.rc20/typesense-server-0.23.0.rc20-linux-amd64.tar.gz &&
-tar -xzf typesense-server-0.23.0.rc20-linux-amd64.tar.gz &&
-git clone https://github.com/lexbor/lexbor && 
-cd lexbor &&
-cmake . && make && sudo make install &&
-sudo apt install libssl-dev
+sh scripts/install_dependencies_debian.sh
 ```
 ## Build
 ```shell
-#git clone ...
-cd librengine &&
 sh scripts/build_all.sh
 ```
 ## Run
@@ -129,4 +118,4 @@ sh scripts/init_db.sh
 ```
 
 ## License
-GNU AFFERO GENERAL PUBLIC LICENSE v3.0
+GNU Affero General Public License v3.0

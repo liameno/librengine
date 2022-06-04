@@ -92,29 +92,29 @@ bool worker::normalize_url(http::url &url, const std::optional<std::string> &own
     if (url.text.empty()) return false;
     if (url.text.size() < 3 && !owner_host) return false;
 
-    if (str::starts_with(url.text, "//")) {
+    if (starts_with(url.text, "//")) {
         url.text.insert(0, "http:");
         url.parse();
     }
     if (!url.host && owner_host && !owner_host->empty()) {
-        http::url owner_url(str::to_lower(*owner_host));
+        http::url owner_url(*owner_host);
         owner_url.parse();
 
         owner_url.set(CURLUPART_QUERY, "");
         owner_url.set(CURLUPART_FRAGMENT, "");
 
-        auto f_c = str::get_first_char(url.text);
+        auto f_c = get_first(url.text);
 
         if (f_c == '.') {
-            str::remove_first_char(url.text);
+            remove_first(url.text);
         } else if (f_c != '/') {
-            if (str::get_last_char(owner_url.text) == '/') str::remove_last_char(owner_url.text);
+            if (get_last(owner_url.text) == '/') remove_last(owner_url.text);
 
             while(true) {
-                const char c = str::get_last_char(owner_url.text);
+                const char c = get_last(owner_url.text);
 
                 if (c == '/' || c == '\0') break;
-                else str::remove_last_char(owner_url.text);
+                else remove_last(owner_url.text);
             }
         } else {
             owner_url.set(CURLUPART_PATH, "");
@@ -123,8 +123,8 @@ bool worker::normalize_url(http::url &url, const std::optional<std::string> &own
         owner_url.compute_text();
         owner_url.parse();
 
-        if (str::get_first_char(url.text) == '/' && str::get_last_char(owner_url.text) == '/') {
-            str::remove_first_char(url.text);
+        if (get_first(url.text) == '/' && get_last(owner_url.text) == '/') {
+            remove_first(url.text);
         }
 
         url.text.insert(0, owner_url.text);
@@ -142,10 +142,10 @@ bool worker::normalize_url(http::url &url, const std::optional<std::string> &own
     url.set(CURLUPART_FRAGMENT, "");
 
     while(true) {
-        char c = str::get_last_char(url.text);
+        char c = get_last(url.text);
 
         if (c == '/' || c == '\0') {
-            str::remove_last_char(url.text);
+            remove_last(url.text);
         } else {
             break;
         }
@@ -171,8 +171,8 @@ void worker::main_thread() {
         auto url_ = queue.front();
         queue.pop();
 
-        http::url site_url(url_.site_url);
-        http::url owner_url(url_.owner_url);
+        http::url site_url(to_lower_copy(url_.site_url));
+        http::url owner_url(to_lower_copy(url_.owner_url));
 
         site_url.parse();
         owner_url.parse();
@@ -192,7 +192,7 @@ void worker::main_thread() {
             continue;
         }
 
-        auto splited = str::split(*site_url.path, ".");
+        auto splited = split(*site_url.path, ".");
         auto file_type = (splited.size() <= 1) ? "" : splited.back();
         auto allowed_file_types = {"", "html", "html5", "php", "phtml"};
 
@@ -272,9 +272,9 @@ worker::result worker::work(url &url_) {
     auto response = request_result.response;
     auto response_length = response->length();
 
-    if_debug_print(logger::type::info, "response length = " + str::to_string(response_length), url.text);
-    if_debug_print(logger::type::info, "response code = " + str::to_string(request_result.code), url.text);
-    if_debug_print(logger::type::info, "curl code = " + str::to_string(request_result.curl_code), url.text);
+    if_debug_print(logger::type::info, "response length = " + to_string(response_length), url.text);
+    if_debug_print(logger::type::info, "response code = " + to_string(request_result.code), url.text);
+    if_debug_print(logger::type::info, "curl code = " + to_string(request_result.curl_code), url.text);
 
     if (request_result.code != 200) {
         if_debug_print(logger::type::error, "code != 200", url.text);
@@ -321,7 +321,7 @@ worker::result worker::work(url &url_) {
     };
 
     for (const auto &s : detect_trackers_strings) {
-        if (str::contains(*response, s, false)) {
+        if (contains(*response, s)) {
             has_trackers = true;
             break;
         }
@@ -343,14 +343,14 @@ worker::result worker::work(url &url_) {
         auto element = lxb_dom_collection_element(collection, i);
         const auto href_value = lxb_string_to_std(lxb_dom_element_get_attribute(element, std_string_to_lxb("href"), 4, nullptr));
 
-        if (!href_value || *href_value == url.text || str::starts_with(*href_value, "#")) {
+        if (!href_value || *href_value == url.text || starts_with(*href_value, "#")) {
             continue;
         }
 
         http::url href_url(*href_value);
         href_url.parse();
 
-        if (!str::starts_with(*href_value, "http")) {
+        if (!starts_with(*href_value, "http")) {
             queue.push({href_url.text, url.text});
         } else {
             queue.push({*href_value, ""});

@@ -3,19 +3,19 @@
 
 #include "str.h"
 
-namespace librengine::str {
+namespace librengine {
     template<typename T>
     typename std::enable_if<false == std::is_convertible<T, std::string>::value, std::string>::type
-    to_string(T const &value) {
+    to_string(const T &value) {
         return std::to_string(value);
     }
 
     template<typename T>
     typename std::enable_if<false == std::is_convertible<T, std::vector<std::string>>::value, std::string> ::type
-    to_string(std::vector<T> const &values) {
+    to_string(const std::vector<T> &values) {
         std::string result;
 
-        for (auto value: values) {
+        for (auto value : values) {
             result.append(value);
         }
 

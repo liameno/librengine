@@ -19,3 +19,6 @@ void logger::print(const type &type_, const std::string &text, const std::string
 
     std::cout << type_color << "[" << type_s << "] " << green << text << white << " [" << id << "]" << std::endl;
 }
+void logger::print(const std::string &text, const std::string &color) {
+    std::cout << color << text << std::endl;
+}

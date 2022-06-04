@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     curl_global_init(CURL_GLOBAL_ALL);
 
     auto content = config::helper::get_file_content(argv[1]);
-    auto splited = str::split(content, "\n");
+    auto splited = split(content, "\n");
     auto w = std::make_shared<worker>(config);
 
     for (const auto &s : splited) {

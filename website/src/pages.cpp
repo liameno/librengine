@@ -46,9 +46,9 @@ namespace website {
         const std::string noscript_src = R"(<noscript><span class="noscript">Encryption doesn't work</span></noscript>)";
         const std::string header_src = R"(<li><a href="/home">Home</a></li><li><a href="/node/info">Node Info</a></li><li><a href="https://github.com/liameno/librengine">Github</a></li>)";
 
-        str::replace_ref(page_src, "{RSA_PUBLIC_KEY}", search_->rsa_public_key_base64);
-        str::replace_ref(page_src, "{NOSCRIPT_CONTENT}", noscript_src);
-        str::replace_ref(page_src, "{HEADER_CONTENT}", header_src);
+        replace(page_src, "{RSA_PUBLIC_KEY}", search_->rsa_public_key_base64);
+        replace(page_src, "{NOSCRIPT_CONTENT}", noscript_src);
+        replace(page_src, "{HEADER_CONTENT}", header_src);
     }
 
     void pages::update(const std::string &id, const std::string &field, const size_t &value) {
@@ -79,7 +79,7 @@ namespace website {
     void pages::home_p(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../frontend/src/index.html");
         const std::string query = request.get_param_value("q");
-        str::replace_ref(page_src, "{QUERY}", query);
+        replace(page_src, "{QUERY}", query);
 
         set_variables(page_src);
         response.status = 200;
@@ -90,12 +90,12 @@ namespace website {
         std::string page_ = request.get_param_value("p");
         std::string is_encryption_enabled_ = request.get_param_value("e");
 
-        std::string query = str::replace(request.get_param_value("q"), " ", "+");
+        std::string query = replace_copy(request.get_param_value("q"), " ", "+");
         bool is_encryption_enabled = is_encryption_enabled_ == "1";
         std::string encryption_key = request.get_param_value("ek");
         size_t page = (!page_.empty()) ? std::stoi(page_) : 1;
 
-        std::string url_params = str::format("?q={0}&p={1}&e={2}&ek={3}", query, page_, is_encryption_enabled_, encryption_key);
+        std::string url_params = format("?q={0}&p={1}&e={2}&ek={3}", query, page_, is_encryption_enabled_, encryption_key);
         encryption_key = encryption::base64::easy_decode(encryption_key);
 
         if (encryption_key.find("END PUBLIC KEY") == -1) {
@@ -128,7 +128,7 @@ namespace website {
             const auto &has_trackers = result.has_trackers ? "bad" : "good";
             const auto &node_url = result.node_url;
 
-            std::string result_src = str::format(center_result_src_format, title, url, desc, rating, id, node_url, has_trackers);
+            std::string result_src = format(center_result_src_format, title, url, desc, rating, id, node_url, has_trackers);
             center_results_src.append(result_src);
         }
 
@@ -147,10 +147,10 @@ namespace website {
 
         std::string url = request.path + url_params;
 
-        str::replace_ref(page_src, "{CENTER_RESULTS}", center_results_src);
-        str::replace_ref(page_src, "{QUERY}", query);
-        str::replace_ref(page_src, "{PREV_PAGE}", str::replace(url, "&p=" + page_, "&p=" + std::to_string((page > 1) ? page - 1 : 1)));
-        str::replace_ref(page_src, "{NEXT_PAGE}", str::replace(url, "&p=" + page_, "&p=" + std::to_string(page + 1)));
+        replace(page_src, "{CENTER_RESULTS}", center_results_src);
+        replace(page_src, "{QUERY}", query);
+        replace(page_src, "{PREV_PAGE}", replace_copy(url, "&p=" + page_, "&p=" + std::to_string((page > 1) ? page - 1 : 1)));
+        replace(page_src, "{NEXT_PAGE}", replace_copy(url, "&p=" + page_, "&p=" + std::to_string(page + 1)));
 
         set_variables(page_src);
         response.status = 200;
@@ -158,7 +158,7 @@ namespace website {
     }
     void pages::node_info_p(const Request &request, Response &response) {
         std::string page_src = config::helper::get_file_content("../frontend/src/node/info.html");
-        str::replace_ref(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
+        replace(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
 
         set_variables(page_src);
         response.status = 200;
@@ -206,7 +206,7 @@ namespace website {
         }
     }
     void pages::api_search(const Request &request, Response &response) {
-        std::string query = str::replace(request.get_param_value("q"), " ", "+");
+        std::string query = replace_copy(request.get_param_value("q"), " ", "+");
         std::string page_ = request.get_param_value("p");
         std::string is_encryption_enabled_ = request.get_param_value("e");
 

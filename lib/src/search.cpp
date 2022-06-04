@@ -24,11 +24,6 @@ namespace librengine {
         }
     }
 
-    void search::remove_html_tags(std::string &html) {
-        std::regex regex(R"(<\/?(\w+)(\s+\w+=(\w+|"[^"]*"|'[^']*'))*(( |)\/|)>)"); //<[^<>]+>
-        html = regex_replace(html, regex, "");
-    }
-
     std::vector<search_result> search::local(const std::string &q, const size_t &p) {
         const auto response = config.db_.websites.search(q, "url,title,desc", {{"page", std::to_string(p)}});
         nlohmann::json result_json = nlohmann::json::parse(response);
@@ -87,9 +82,9 @@ namespace librengine {
                     return {};
                 }
 
-                node_url_params = str::format("?q={0}&p={1}&e=1&ek={2}", encrypted_query, page_, rsa_public_key_base64);
+                node_url_params = format("?q={0}&p={1}&e=1&ek={2}", encrypted_query, page_, rsa_public_key_base64);
             } else {
-                node_url_params = str::format("?q={0}&p={1}&e=0", query, page_);
+                node_url_params = format("?q={0}&p={1}&e=0", query, page_);
             }
 
             http::request node_request(node.url + "/api/search" + node_url_params);

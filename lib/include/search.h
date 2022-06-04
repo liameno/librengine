@@ -26,8 +26,6 @@ namespace librengine {
         explicit search(const config::all &config);
         void init();
 
-        void remove_html_tags(std::string &html);
-
         std::vector<search_result> local(const std::string &q, const size_t &p);
         std::vector<search_result> nodes(std::string &query, const size_t &page, const bool &is_encryption_enabled);
     };

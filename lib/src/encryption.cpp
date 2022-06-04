@@ -201,7 +201,7 @@ namespace librengine::encryption {
         auto block_size = get_size();
         std::string result;
 
-        auto blocks = str::split(text, "\n");
+        auto blocks = split(text, "\n");
         auto size = blocks.size();
 
         for (int i = 0; i < size; ++i) {
@@ -227,7 +227,7 @@ namespace librengine::encryption {
         auto block_size = get_size();
         std::string result;
 
-        auto blocks = str::split(text, "\n");
+        auto blocks = split(text, "\n");
         auto size = blocks.size();
 
         for (int i = 0; i < size; ++i) {

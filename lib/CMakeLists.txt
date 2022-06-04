@@ -4,10 +4,10 @@ project(librengine LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 set(include include/encryption.h include/typesense.h include/http.h include/str.h include/str_impl.h include/config.h include/logger.h include/json.hpp include/structs.h include/search.h include/helper.h include/cache.h include/robots_txt.h)
-set(src src/encryption.cpp src/typesense.cpp src/http.cpp src/str.cpp src/logger.cpp src/config.cpp src/search.cpp src/helper.cpp src/robots_txt.cpp)
+set(src src/encryption.cpp src/typesense.cpp src/http.cpp src/logger.cpp src/config.cpp src/search.cpp src/helper.cpp src/robots_txt.cpp)
 
 set(include_all ${include})
-set(src_all ${src})
+set(src_all ${src} src/str.cpp)
 
 #lexbor - html, css / https://github.com/lexbor/lexbor
 #curl - http lib    / https://github.com/curl/curl

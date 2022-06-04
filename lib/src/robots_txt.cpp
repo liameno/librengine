@@ -75,26 +75,26 @@ namespace librengine {
         agents.emplace_back("");
     }
     void robots_txt::parse() {
-        auto splited = str::split(text, "\n");
+        auto splited = split(text, "\n");
 
         for (const auto &pair : splited) {
-            auto splited_pair = str::split(pair, ":");
+            auto splited_pair = split(pair, ":");
             auto splited_pair_size = splited_pair.size();
 
             if (splited_pair_size != 2) continue;
 
-            auto key = str::to_lower(splited_pair[0]);
-            auto value = str::to_lower(splited_pair[1]);
+            auto key = to_lower_copy(splited_pair[0]);
+            auto value = to_lower_copy(splited_pair[1]);
 
-            key = str::trim(key);
-            value = str::trim_start(value);
+            trim(key);
+            trim_start(value);
 
-            if (!value.empty()) value = str::trim_end(value);
+            if (!value.empty()) trim_end(value);
             auto comment_index = value.find('#');
 
             if (comment_index != -1) {
                 value = value.substr(0, comment_index);
-                value = str::trim_end(value);
+                trim_end(value);
             }
 
             if (key.empty()) continue;

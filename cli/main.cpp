@@ -1,7 +1,6 @@
 #include <librengine/config.h>
 #include <librengine/logger.h>
 #include <librengine/search.h>
-#include <librengine/encryption.h>
 
 int main(int argc, char **argv) {
     using namespace librengine;
@@ -31,8 +30,7 @@ int main(int argc, char **argv) {
         const auto &url = result.url;
         const auto &desc = result.desc;
         const auto &rating = result.rating;
-        const auto &has_ads = result.has_ads ? "has" : "hasn't";
-        const auto &has_analytics = result.has_analytics ? "has" : "hasn't";
+        const auto &has_trackers = result.has_trackers ? "has" : "hasn't";
         const auto &node_url = result.node_url;
 
         std::cout << title << std::endl;
@@ -40,8 +38,7 @@ int main(int argc, char **argv) {
         std::cout << desc << std::endl;
         std::cout << rating << " rating" << std::endl;
         std::cout << node_url << " node url " << std::endl;
-        std::cout << has_ads << " ads" << std::endl;
-        std::cout << has_analytics << " analytics" << std::endl;
+        std::cout << has_trackers << " trackers" << std::endl;
         std::cout << std::string(25, '=') << std::endl;
     }
 
