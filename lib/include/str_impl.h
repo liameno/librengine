@@ -23,14 +23,8 @@ namespace librengine {
     }
 
     template<typename T>
-    bool contains(const std::vector<T> &values, const T value, const bool &is_value_to_lower) {
-        auto end = values.end();
-
-        if (is_value_to_lower) {
-            return std::find(values.begin(), end, to_lower(value)) != end;
-        }
-
-        return std::find(values.begin(), end, value) != end;
+    bool contains(const std::vector<T> &values, const T value) {
+        return std::find(values.begin(), values.end(), value) != values.end();
     }
 
     template<typename... T>
