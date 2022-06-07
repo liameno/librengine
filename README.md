@@ -23,7 +23,7 @@
 
 ## TODO
 - [x] Encryption (assymetric)
-- [ ] Multithreading crawler
+- [x] Multithreading crawler
 - [ ] Robots Rules (from headers & html) & crawl-delay
 - [ ] Images Crawler
 - [ ] Adaptive Website
@@ -54,8 +54,8 @@ sh scripts/init_db.sh
 ```
 #### Crawler
 ```shell
-./crawler ../../sites.txt ../../config.json
-#[sites_path] [config path]
+./crawler ../../sites.txt 5 ../../config.json
+#[sites_path] [threads_count] [config path]
 ```
 #### Website
 ```shell
