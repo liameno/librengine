@@ -5,6 +5,7 @@
 
 ## Features
 #### Crawler
+- Threads
 - Cache
 - Robots.txt
 - Update info after time
