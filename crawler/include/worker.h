@@ -5,6 +5,9 @@
 
 #include <librengine/config.h>
 #include <librengine/typesense.h>
+#include <librengine/cache.h>
+#include <mutex>
+#include <thread>
 
 #ifndef WORKER_H
 #define WORKER_H
@@ -12,17 +15,17 @@
 using namespace librengine;
 
 class worker {
-private:
+public:
     struct url {
         std::string site_url;
         std::string owner_url;
+
+        url() = default;
     };
-public:
     enum class result {
         added,
         disallowed_robots,
         disallowed_file_type,
-        work_false,
         already_added,
         pages_limit,
         null_or_limit,
@@ -30,10 +33,21 @@ public:
         error,
     };
 private:
+    typedef std::queue<url> queue_t;
+    typedef librengine::cache::lru<std::string, result> cache_t;
+private:
     config::all config;
-    bool is_work = false;
+    bool is_work;
+
+    std::vector<std::shared_ptr<std::thread>> threads;
+
+    std::shared_ptr<cache_t> cache_host;
+    std::shared_ptr<cache_t> cache_url;
 public:
-    std::queue<url> queue;
+    std::shared_ptr<queue_t> queue;
+public:
+    std::mutex queue_mutex;
+    std::mutex cache_mutex;
 public:
     std::optional<std::string> get_added_robots_txt(const std::string &host);
     size_t hints_count_added(const std::string &field, const std::string &value);
@@ -45,6 +59,10 @@ public:
     bool normalize_url(librengine::http::url &url, const std::optional<std::string> &owner_host = std::nullopt) const;
 public:
     explicit worker(const librengine::config::all &config);
+
+    void start_threads(const int &count, const bool &join = true);
+    void stop_threads();
+
     void main_thread();
     result work(url &url_);
 };
