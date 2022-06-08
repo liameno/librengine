@@ -26,8 +26,9 @@
 - [x] Encryption (assymetric)
 - [x] Multithreading crawler
 - [ ] Robots Rules (from headers & html) & crawl-delay
-- [ ] Images Crawler
 - [ ] Adaptive Website
+- [ ] Own FTS ([...](https://github.com/liameno/kissearch))
+- [ ] Images Crawler
 
 ## Dependencies
 - libcurl   ([source](https://github.com/curl/curl))
