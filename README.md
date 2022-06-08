@@ -26,7 +26,7 @@
 - [x] Encryption (assymetric)
 - [x] Multithreading crawler
 - [ ] Robots Rules (from headers & html) & crawl-delay
-- [ ] Adaptive Website
+- [x] Responsive web design
 - [ ] Own FTS ([...](https://github.com/liameno/kissearch))
 - [ ] Images Crawler
 

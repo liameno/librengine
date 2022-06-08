@@ -26,3 +26,14 @@
     font-size: 50px;
     color: var(--white);
 }
+
+@media screen and (max-width: 1200px) {
+    .search_widget {
+        width: 60%;
+    }
+}
+@media screen and (max-width: 800px) {
+    .search_widget {
+        width: 90%;
+    }
+}

@@ -13,7 +13,7 @@
 .rating_container {
     display: flex;
     justify-content: right;
-    width: 100%;
+    width: 50%;
 }
 
 .top_container {
@@ -148,4 +148,31 @@
     background: var(--green2);
     color: var(--light);
     border-radius: 5px;
+}
+
+@media screen and (max-width: 800px) {
+    .header_content {
+        display: none;
+    }
+    .rating_container {
+        display: none;
+    }
+    .center_container {
+        margin: 0;
+        width: 100%;
+    }
+    .top_container {
+        border-bottom: 1px solid var(--gray_dark);
+    }
+}
+@media screen and (max-width: 1000px) {
+    .search_widget {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .content {
+        width: 100%;
+    }
 }
