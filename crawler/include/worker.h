@@ -39,13 +39,14 @@ private:
     config::all config;
     bool is_work;
 
-    std::vector<std::shared_ptr<std::thread>> threads;
+    std::vector<std::pair<std::shared_ptr<std::thread>, bool>> threads;
 
     std::shared_ptr<cache_t> cache_host;
     std::shared_ptr<cache_t> cache_url;
 public:
     std::shared_ptr<queue_t> queue;
 public:
+    std::mutex threads_mutex;
     std::mutex queue_mutex;
     std::mutex cache_mutex;
 public:

@@ -186,12 +186,12 @@ void worker::start_threads(const int &count, const bool &join) {
 
     for (int i = 0; i < count; ++i) {
         auto t = std::make_shared<std::thread>(&worker::main_thread, this);
-        threads.push_back(t);
+        threads.emplace_back(t, false);
     }
 
     if (join) {
         for (auto &t: threads) {
-            t->join();
+            t.first->join();
         }
     }
 }
@@ -202,15 +202,49 @@ void worker::stop_threads() {
 void worker::main_thread() {
     const static std::vector<std::string> allowed_file_types = {"", "html", "html5", "php", "phtml"};
 
+    auto this_thread_id = std::this_thread::get_id();
+    std::pair<std::shared_ptr<std::thread>, bool> *thread = nullptr;
+
+    threads_mutex.lock();
+    for (auto &t: threads) {
+        if (t.first->get_id() == this_thread_id) {
+            thread = &t;
+        }
+    }
+    threads_mutex.unlock();
+
+    if (thread == nullptr) {
+        return;
+    }
+
     while (true) {
-        if (!is_work) return;
+        if (!is_work) break;
 
         queue_mutex.lock();
         bool is_empty = queue->empty();
         queue_mutex.unlock();
 
-        if (is_empty) break;
+        if (is_empty) {
+            bool is_working = false;
 
+            threads_mutex.lock();
+            for (auto &t: threads) {
+                if (t.second) {
+                    is_working = true;
+                }
+            }
+            threads_mutex.unlock();
+
+            if (!is_working) {
+                break;
+            } else {
+                //wait for new urls
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                continue;
+            }
+        }
+
+        thread->second = true;
         queue_mutex.lock();
         auto url_ = queue->front();
         queue->pop();
@@ -225,15 +259,18 @@ void worker::main_thread() {
         if (!normalize_url(site_url, owner_url.text)) {
             if_debug_print(logger::type::error, "normalize url", site_url.text);
             cache_host->put(site_url.text, result::null_or_limit);
+            thread->second = false;
             continue;
         }
         if (!site_url.host) {
             if_debug_print(logger::type::error, "host = null", site_url.text);
             cache_host->put(site_url.text, result::null_or_limit);
+            thread->second = false;
             continue;
         }
         if (site_url.text == owner_url.text) {
             if_debug_print(logger::type::error, "url = owner", site_url.text);
+            thread->second = false;
             continue;
         }
 
@@ -245,6 +282,7 @@ void worker::main_thread() {
             cache_mutex.lock();
             cache_host->put(site_url.text, result::disallowed_file_type);
             cache_mutex.unlock();
+            thread->second = false;
             continue;
         }
 
@@ -257,7 +295,8 @@ void worker::main_thread() {
         cache_mutex.unlock();
 
         if (cache != nullptr) {
-            if_debug_print(logger::type::error, "found in cache", site_url.text);
+            //if_debug_print(logger::type::error, "found in cache", site_url.text);
+            thread->second = false;
             continue;
         }
 
@@ -266,6 +305,7 @@ void worker::main_thread() {
             cache_mutex.lock();
             cache_host->put(site_url.text, result::already_added);
             cache_mutex.unlock();
+            thread->second = false;
             continue;
         }
         if (hints_count_added("host", *site_url.host) >= config.crawler_.max_pages_site) {
@@ -273,6 +313,7 @@ void worker::main_thread() {
             cache_mutex.lock();
             cache_host->put(*site_url.host, result::pages_limit);
             cache_mutex.unlock();
+            thread->second = false;
             continue;
         }
 
@@ -286,6 +327,8 @@ void worker::main_thread() {
             //delay, after http request
             std::this_thread::sleep_for(std::chrono::seconds(config.crawler_.delay_time_s));
         }
+
+        thread->second = false;
     }
 }
 worker::result worker::work(url &url_) {
@@ -322,9 +365,10 @@ worker::result worker::work(url &url_) {
     auto response = request_result.response;
     auto response_length = response->length();
 
-    if_debug_print(logger::type::info, "response length = " + to_string(response_length), site_url.text);
-    if_debug_print(logger::type::info, "response code = " + to_string(request_result.code), site_url.text);
-    if_debug_print(logger::type::info, "curl code = " + to_string(request_result.curl_code), site_url.text);
+    //if_debug_print(logger::type::info, "response length = " + to_string(response_length), site_url.text);
+    if_debug_print(logger::type::info,
+                   "response code = "  + to_string(request_result.code) +
+                   " | curl code = " + to_string(request_result.curl_code), site_url.text);
 
     if (request_result.code != 200) {
         if_debug_print(logger::type::error, "code != 200", site_url.text);
@@ -353,9 +397,6 @@ worker::result worker::work(url &url_) {
     if (title.empty() && desc.empty()) {
         if_debug_print(logger::type::error, "title & desc are empty", site_url.text);
         return result::null_or_limit;
-    }
-    if (title.empty() || title == " ") {
-        title = "-";
     }
 
     bool has_trackers = false;
@@ -412,7 +453,9 @@ worker::result worker::work(url &url_) {
             new_url.site_url = *href_value;
         }
 
+        queue_mutex.lock();
         queue->push(new_url);
+        queue_mutex.unlock();
     }
 
     if (a_length > 0) lxb_dom_collection_destroy(collection, true);
