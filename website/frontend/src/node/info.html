@@ -12,8 +12,11 @@
     <link rel="stylesheet" media="all" href="../../css/page.css">
     <link rel="stylesheet" media="all" href="../../css/header.css">
     <link rel="stylesheet" media="all" href="../../css/node/info.css">
+
+    <script src="../../js/chart.min.js"></script>
+    <script src="../../js/node/info.js"></script>
 </head>
-<body>
+<body onload="chart()">
 <div class="background"></div>
 <div class="container">
     <header class="top_container">
@@ -26,20 +29,8 @@
         </div>
     </header>
     <div class="center_container">
-        <!--<div class="websites counter">
-            <div class="content">
-                <i class="fa fa-globe"></i>
-                <span class="title">{WEBSITES_COUNT}</span>
-                <h2 class="title">Websites</h2>
-            </div>
-        </div>-->
-        <div class="pages counter">
-            <div class="content">
-                <i class="fa fa-file"></i>
-                <span class="title">{PAGES_COUNT}</span>
-                <h2 class="title">Pages</h2>
-            </div>
-        </div>
+        <canvas id="chart"></canvas>
+        <span class="footer_info">Total: {PAGES_COUNT}</span>
     </div>
 </div>
 </body>

@@ -24,6 +24,7 @@
 namespace website {
     using namespace librengine;
     using namespace httplib;
+    using namespace nlohmann;
 
     class pages {
     private:
@@ -52,6 +53,7 @@ namespace website {
         void api_minus_rating(const Request &request, Response &response);
         void api_search(const Request &request, Response &response);
         void api_node_info(const Request &request, Response &response);
+        void api_node_info_chart(const Request &request, Response &response);
         void not_found(const Request &request, Response &response);
     };
 }

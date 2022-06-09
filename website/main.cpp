@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
         server->Get("/api/minus_rating", [&](const Request &req, Response &res) { pages->api_minus_rating(req, res); });
         server->Get("/api/search", [&](const Request &req, Response &res) { pages->api_search(req, res); });
         server->Get("/api/node/info", [&](const Request &req, Response &res) { pages->api_node_info(req, res); });
+        server->Get("/api/node/info/chart", [&](const Request &req, Response &res) { pages->api_node_info_chart(req, res); });
         server->Get(".*", [&](const Request &req, Response &res) { pages->not_found(req, res); });
         server->listen("0.0.0.0", config.website_.port);
     });

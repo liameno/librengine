@@ -53,26 +53,26 @@ namespace website {
 
     void pages::update(const std::string &id, const std::string &field, const size_t &value) {
         const auto response = config.db_.websites.get(std::stoi(id));
-        nlohmann::json result_json = nlohmann::json::parse(response);
+        json result_json = json::parse(response);
         result_json[field] = value;
 
         config.db_.websites.update(result_json.dump());
     }
     void pages::update(const std::string &id, const std::string &field, const std::string &value) {
         const auto response = config.db_.websites.get(std::stoi(id));
-        nlohmann::json result_json = nlohmann::json::parse(response);
+        json result_json = json::parse(response);
         result_json[field] = value;
 
         config.db_.websites.update(result_json.dump());
     }
     size_t pages::get_number_field_value(const std::string &id, const std::string &field) {
         const auto response = config.db_.websites.get(std::stoi(id));
-        nlohmann::json result_json = nlohmann::json::parse(response);
+        json result_json = json::parse(response);
         return result_json[field];
     }
     size_t pages::get_field_count(const std::string &field) {
         const auto response = config.db_.websites.search("*", field);
-        nlohmann::json result_json = nlohmann::json::parse(response);
+        json result_json = json::parse(response);
         return result_json["found"];
     }
 
@@ -214,7 +214,7 @@ namespace website {
         std::string encryption_key = request.get_param_value("ek");
         size_t page = (!page_.empty()) ? std::stoi(page_) : 1;
 
-        nlohmann::json page_src;
+        json page_src;
 
         if_debug_print(logger::type::info, "query = " + query, request.path);
 
@@ -249,7 +249,7 @@ namespace website {
         std::string result;
 
         try {
-            result = page_src.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+            result = page_src.dump(-1, ' ', false, json::error_handler_t::replace);
         } catch (const std::exception& e) {
             if_debug_print(logger::type::error, e.what(), request.path);
             response.set_redirect("/", 500);
@@ -268,14 +268,47 @@ namespace website {
         }
 
         response.status = 200;
-        response.set_content(result, "text/html");
+        response.set_content(result, "application/json");
     }
     void pages::api_node_info(const Request &request, Response &response) {
-        nlohmann::json page_src;
+        json page_src;
         page_src["pages_count"] = get_field_count("url");
 
         response.status = 200;
-        response.set_content(page_src.dump(), "text/html");
+        response.set_content(page_src.dump(), "application/json");
+    }
+    void pages::api_node_info_chart(const Request &request, Response &response) {
+        json page_src;
+        auto now = time(nullptr);
+        auto min_gm = gmtime(&now);
+
+        for (int i = 1; i < 31; ++i) {
+            min_gm->tm_mday = i;
+            min_gm->tm_hour = 0;
+            min_gm->tm_min = 0;
+            min_gm->tm_sec = 0;
+
+            auto min = timegm(min_gm);
+
+            min_gm->tm_mday = i;
+            min_gm->tm_hour = 23;
+            min_gm->tm_min = 59;
+            min_gm->tm_sec = 59;
+
+            auto max = timegm(min_gm);
+
+            auto filter_by = "date:>" + std::to_string(min) +  " && date:<" + std::to_string(max);
+            filter_by = http::url::escape(filter_by);
+
+            auto found = config.db_.websites.search("*", "url", {{"filter_by", filter_by}, {"num_typos", "0"}});
+            json json = json::parse(found);
+            auto found_count = json["found"];
+
+            page_src["data"][std::to_string(i)] = found_count;
+        }
+
+        response.status = 200;
+        response.set_content(page_src.dump(), "application/json");
     }
     void pages::not_found(const Request &request, Response &response) {
         response.status = 301;
