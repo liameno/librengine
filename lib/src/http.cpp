@@ -198,7 +198,7 @@ namespace librengine::http {
         curl_url_set(current_curl_url, what, value.c_str(), 0);
     }
 
-    bool url::is_localhost() {
+    bool url::is_localhost() const {
         std::string h = host.value_or("");
         return h == "127.0.0.1" || h == "0.0.0.0" || "localhost";
     }
@@ -208,6 +208,9 @@ namespace librengine::http {
         this->data = data.value_or("");
         this->type = type.value_or("GET");
         this->curl = curl_easy_init();
+
+        this->options.timeout_s = 5;
+        this->options.is_follow_location = false;
         this->options.headers = std::make_shared<std::vector<header>>();
 
         this->url = replace_copy(this->url, " ", "%20");
@@ -236,13 +239,15 @@ namespace librengine::http {
     }
 
     void request::perform() {
-        if (options.proxy) { curl_easy_setopt(curl, CURLOPT_PROXY, options.proxy.value().compute_curl_format().c_str()); }
-        if (options.user_agent) { curl_easy_setopt(curl, CURLOPT_USERAGENT, options.user_agent.value().c_str()); }
-        if (options.timeout_s > 0) { curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout_s); }
+        if (options.proxy) curl_easy_setopt(curl, CURLOPT_PROXY, options.proxy.value().compute_curl_format().c_str());
+        if (options.user_agent) curl_easy_setopt(curl, CURLOPT_USERAGENT, options.user_agent.value().c_str());
+        if (options.timeout_s > 0) curl_easy_setopt(curl, CURLOPT_TIMEOUT, options.timeout_s);
+        if (options.is_follow_location) curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
         struct curl_slist *curl_headers = headers_to_curl_struct(options.headers);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curl_headers);
         std::string temp_response;
+        std::string temp_url;
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, type.c_str());
@@ -254,6 +259,7 @@ namespace librengine::http {
         if (!temp_response.empty()) result.response = temp_response;
 
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &result.code);
+        curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &result.location_url);
         curl_slist_free_all(curl_headers);
     }
 }

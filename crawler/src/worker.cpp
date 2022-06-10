@@ -76,6 +76,7 @@ http::request::result_s worker::site(const http::url &url) {
     http::request request(url.text);
 
     request.options.timeout_s = config.crawler_.load_page_timeout_s;
+    request.options.is_follow_location = true;
     request.options.user_agent = config.crawler_.user_agent;
     request.options.proxy = config.crawler_.proxy;
     request.perform();
@@ -369,6 +370,12 @@ worker::result worker::work(url &url_) {
     if_debug_print(logger::type::info,
                    "response code = "  + to_string(request_result.code) +
                    " | curl code = " + to_string(request_result.curl_code), site_url.text);
+
+    if (request_result.location_url.has_value() && !request_result.location_url->empty()) {
+        url_.site_url = *request_result.location_url;
+        site_url.text = *request_result.location_url;
+        site_url.parse();
+    }
 
     if (request_result.code != 200) {
         if_debug_print(logger::type::error, "code != 200", site_url.text);

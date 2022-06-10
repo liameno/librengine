@@ -23,7 +23,11 @@ int main(int argc, char **argv) {
 
     worker w(config);
 
-    for (const auto &s : splited) {
+    for (auto s : splited) {
+        if (!starts_with(s, "http")) {
+            s.insert(0, "http://");
+        }
+
         worker::url new_url;
         new_url.site_url = s;
         w.queue->push(new_url);

@@ -72,18 +72,20 @@ namespace librengine::http {
 
         void set(const CURLUPart &what, const std::string &value);
 
-        bool is_localhost();
+        bool is_localhost() const;
     };
 
     class request {
     public:
         struct result_s {
             std::optional<std::string> response;
+            std::optional<std::string> location_url;
             long code {0};
             CURLcode curl_code; //https://curl.se/libcurl/c/libcurl-errors.html
         };
         struct {
-            int timeout_s {5};
+            int timeout_s;
+            bool is_follow_location;
             std::optional<std::string> user_agent;
             std::optional<http::proxy> proxy;
             std::shared_ptr<std::vector<header>> headers;
