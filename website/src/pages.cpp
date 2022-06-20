@@ -52,54 +52,54 @@ namespace website {
     }
 
     void pages::update(const std::string &id, const std::string &field, const size_t &value) {
-        const auto response = config.db_.websites.get(std::stoi(id));
-        json result_json = json::parse(response);
+        const auto res = config.db_.websites.get(std::stoi(id));
+        json result_json = json::parse(res);
         result_json[field] = value;
 
         config.db_.websites.update(result_json.dump());
     }
     void pages::update(const std::string &id, const std::string &field, const std::string &value) {
-        const auto response = config.db_.websites.get(std::stoi(id));
-        json result_json = json::parse(response);
+        const auto res = config.db_.websites.get(std::stoi(id));
+        json result_json = json::parse(res);
         result_json[field] = value;
 
         config.db_.websites.update(result_json.dump());
     }
     size_t pages::get_number_field_value(const std::string &id, const std::string &field) {
-        const auto response = config.db_.websites.get(std::stoi(id));
-        json result_json = json::parse(response);
+        const auto res = config.db_.websites.get(std::stoi(id));
+        json result_json = json::parse(res);
         return result_json[field];
     }
     size_t pages::get_field_count(const std::string &field) {
-        const auto response = config.db_.websites.search("*", field);
-        json result_json = json::parse(response);
+        const auto res = config.db_.websites.search("*", field);
+        json result_json = json::parse(res);
         return result_json["found"];
     }
 
-    void pages::home_p(const Request &request, Response &response) {
+    void pages::home_p(lambda_args) {
         std::string page_src = config::helper::get_file_content("../frontend/src/index.html");
-        const std::string query = request.get_param_value("q");
+        const std::string query = req.get_param_value("q");
         replace(page_src, "{QUERY}", query);
 
         set_variables(page_src);
-        response.status = 200;
-        response.set_content(page_src, "text/html");
+        res.status = 200;
+        res.set_content(page_src, "text/html");
     }
-    void pages::search_p(const Request &request, Response &response) {
+    void pages::search_p(lambda_args) {
         std::string page_src = config::helper::get_file_content("../frontend/src/search.html");
-        std::string page_ = request.get_param_value("p");
-        std::string is_encryption_enabled_ = request.get_param_value("e");
+        std::string page_ = req.get_param_value("p");
+        std::string is_encryption_enabled_ = req.get_param_value("e");
 
-        std::string query = replace_copy(request.get_param_value("q"), " ", "+");
+        std::string query = replace_copy(req.get_param_value("q"), " ", "+");
         bool is_encryption_enabled = is_encryption_enabled_ == "1";
-        std::string encryption_key = request.get_param_value("ek");
+        std::string encryption_key = req.get_param_value("ek");
         size_t page = (!page_.empty()) ? std::stoi(page_) : 1;
 
         std::string url_params = format("?q={0}&p={1}&e={2}&ek={3}", query, page_, is_encryption_enabled_, encryption_key);
         encryption_key = encryption::base64::easy_decode(encryption_key);
 
         if (encryption_key.find("END PUBLIC KEY") == -1) {
-            response.set_redirect("/", 500);
+            res.set_redirect("/", 500);
             return;
         }
 
@@ -107,7 +107,7 @@ namespace website {
             query = search_->rsa.easy_private_decrypt(query);
 
             if (query.empty()) {
-                response.set_redirect("/", 500);
+                res.set_redirect("/", 500);
                 return;
             }
         }
@@ -135,17 +135,17 @@ namespace website {
         if (center_results_src.empty()) center_results_src = "Not Found";
 
         if (is_encryption_enabled) {
-            encryption::rsa request_rsa;
-            request_rsa.easy_read_public_key_buffer(encryption_key);
-            center_results_src = request_rsa.easy_public_encrypt(center_results_src);
+            encryption::rsa req_rsa;
+            req_rsa.easy_read_public_key_buffer(encryption_key);
+            center_results_src = req_rsa.easy_public_encrypt(center_results_src);
 
             if (center_results_src.empty()) {
-                response.set_redirect("/", 500);
+                res.set_redirect("/", 500);
                 return;
             }
         }
 
-        std::string url = request.path + url_params;
+        std::string url = req.path + url_params;
 
         replace(page_src, "{CENTER_RESULTS}", center_results_src);
         replace(page_src, "{QUERY}", query);
@@ -153,24 +153,24 @@ namespace website {
         replace(page_src, "{NEXT_PAGE}", replace_copy(url, "&p=" + page_, "&p=" + std::to_string(page + 1)));
 
         set_variables(page_src);
-        response.status = 200;
-        response.set_content(page_src, "text/html");
+        res.status = 200;
+        res.set_content(page_src, "text/html");
     }
-    void pages::node_info_p(const Request &request, Response &response) {
+    void pages::node_info_p(lambda_args) {
         std::string page_src = config::helper::get_file_content("../frontend/src/node/info.html");
         replace(page_src, "{PAGES_COUNT}", std::to_string(get_field_count("url")));
 
         set_variables(page_src);
-        response.status = 200;
-        response.set_content(page_src, "text/html");
+        res.status = 200;
+        res.set_content(page_src, "text/html");
     }
-    void pages::api_get_rsa_public_key(const Request &request, Response &response) {
-        response.status = 200;
-        response.set_content(search_->rsa_public_key, "text/html");
+    void pages::api_get_rsa_public_key(lambda_args) {
+        res.status = 200;
+        res.set_content(search_->rsa_public_key, "text/html");
     }
-    void pages::api_plus_rating(const Request &request, Response &response) {
-        const std::string id = request.get_param_value("id");
-        const std::string is_redirect = request.get_param_value("redirect");
+    void pages::api_plus_rating(lambda_args) {
+        const std::string id = req.get_param_value("id");
+        const std::string is_redirect = req.get_param_value("redirect");
         const size_t rating = get_number_field_value(id, "rating");
 
         if (rating < MAX_RATING) {
@@ -179,16 +179,16 @@ namespace website {
         }
 
         if (is_redirect == "1") {
-            const auto referer = request.headers.find("Referer")->second;
+            const auto referer = req.headers.find("Referer")->second;
             const std::string redirect_url = (!referer.empty()) ? referer : "/";
-            response.set_redirect(redirect_url, 301);
+            res.set_redirect(redirect_url, 301);
         } else {
-            response.status = 200;
+            res.status = 200;
         }
     }
-    void pages::api_minus_rating(const Request &request, Response &response) {
-        const std::string id = request.get_param_value("id");
-        const std::string is_redirect = request.get_param_value("redirect");
+    void pages::api_minus_rating(lambda_args) {
+        const std::string id = req.get_param_value("id");
+        const std::string is_redirect = req.get_param_value("redirect");
         const size_t rating = get_number_field_value(id, "rating");
 
         if (rating > MIN_RATING) {
@@ -197,42 +197,42 @@ namespace website {
         }
 
         if (is_redirect == "1") {
-            response.status = 301;
-            const auto referer = request.headers.find("Referer")->second;
+            res.status = 301;
+            const auto referer = req.headers.find("Referer")->second;
             const std::string redirect_url = (!referer.empty()) ? referer : "/";
-            response.set_redirect(redirect_url);
+            res.set_redirect(redirect_url);
         } else {
-            response.status = 200;
+            res.status = 200;
         }
     }
-    void pages::api_search(const Request &request, Response &response) {
-        std::string query = replace_copy(request.get_param_value("q"), " ", "+");
-        std::string page_ = request.get_param_value("p");
-        std::string is_encryption_enabled_ = request.get_param_value("e");
+    void pages::api_search(lambda_args) {
+        std::string query = replace_copy(req.get_param_value("q"), " ", "+");
+        std::string page_ = req.get_param_value("p");
+        std::string is_encryption_enabled_ = req.get_param_value("e");
 
         bool is_encryption_enabled = is_encryption_enabled_ == "1";
-        std::string encryption_key = request.get_param_value("ek");
+        std::string encryption_key = req.get_param_value("ek");
         size_t page = (!page_.empty()) ? std::stoi(page_) : 1;
 
         json page_src;
 
-        if_debug_print(logger::type::info, "query = " + query, request.path);
+        if_debug_print(logger::type::info, "query = " + query, req.path);
 
         if (is_encryption_enabled) {
             encryption_key = encryption::base64::easy_decode(encryption_key);
             query = search_->rsa.easy_private_decrypt(query);
 
             if (query.empty()) {
-                response.set_redirect("/", 500);
+                res.set_redirect("/", 500);
                 return;
             }
 
-            if_debug_print(logger::type::info, "decrypted query = " + query, request.path);
+            if_debug_print(logger::type::info, "decrypted query = " + query, req.path);
         }
 
         const auto search_results = search_->local(query, page);
         auto sr_size = search_results.size();
-        if_debug_print(logger::type::info, "found = " + std::to_string(sr_size), request.path);
+        if_debug_print(logger::type::info, "found = " + std::to_string(sr_size), req.path);
 
         for (int i = 0; i < sr_size; ++i) {
             const auto &result = search_results[i];
@@ -251,33 +251,33 @@ namespace website {
         try {
             result = page_src.dump(-1, ' ', false, json::error_handler_t::replace);
         } catch (const std::exception& e) {
-            if_debug_print(logger::type::error, e.what(), request.path);
-            response.set_redirect("/", 500);
+            if_debug_print(logger::type::error, e.what(), req.path);
+            res.set_redirect("/", 500);
             return;
         }
 
         if (is_encryption_enabled) {
-            encryption::rsa request_rsa;
-            request_rsa.easy_read_public_key_buffer(encryption_key);
-            result = request_rsa.easy_public_encrypt(result);
+            encryption::rsa req_rsa;
+            req_rsa.easy_read_public_key_buffer(encryption_key);
+            result = req_rsa.easy_public_encrypt(result);
 
             if (result.empty()) {
-                response.set_redirect("/", 500);
+                res.set_redirect("/", 500);
                 return;
             }
         }
 
-        response.status = 200;
-        response.set_content(result, "application/json");
+        res.status = 200;
+        res.set_content(result, "application/json");
     }
-    void pages::api_node_info(const Request &request, Response &response) {
+    void pages::api_node_info(lambda_args) {
         json page_src;
         page_src["pages_count"] = get_field_count("url");
 
-        response.status = 200;
-        response.set_content(page_src.dump(), "application/json");
+        res.status = 200;
+        res.set_content(page_src.dump(), "application/json");
     }
-    void pages::api_node_info_chart(const Request &request, Response &response) {
+    void pages::api_node_info_chart(lambda_args) {
         json page_src;
         auto now = time(nullptr);
         auto min_gm = gmtime(&now);
@@ -307,11 +307,11 @@ namespace website {
             page_src["data"][std::to_string(i)] = found_count;
         }
 
-        response.status = 200;
-        response.set_content(page_src.dump(), "application/json");
+        res.status = 200;
+        res.set_content(page_src.dump(), "application/json");
     }
-    void pages::not_found(const Request &request, Response &response) {
-        response.status = 301;
-        response.set_redirect("/home");
+    void pages::not_found(lambda_args) {
+        res.status = 301;
+        res.set_redirect("/home");
     }
 }

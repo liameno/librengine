@@ -21,6 +21,8 @@
 #ifndef PAGES_H
 #define PAGES_H
 
+#define lambda_args const Request &req, Response &res
+
 namespace website {
     using namespace librengine;
     using namespace httplib;
@@ -45,16 +47,16 @@ namespace website {
         size_t get_number_field_value(const std::string &id, const std::string &field);
         size_t get_field_count(const std::string &field);
 
-        void home_p(const Request &request, Response &response);
-        void search_p(const Request &request, Response &response);
-        void node_info_p(const Request &request, Response &response);
-        void api_get_rsa_public_key(const Request &request, Response &response);
-        void api_plus_rating(const Request &request, Response &response);
-        void api_minus_rating(const Request &request, Response &response);
-        void api_search(const Request &request, Response &response);
-        void api_node_info(const Request &request, Response &response);
-        void api_node_info_chart(const Request &request, Response &response);
-        void not_found(const Request &request, Response &response);
+        void home_p(lambda_args);
+        void search_p(lambda_args);
+        void node_info_p(lambda_args);
+        void api_get_rsa_public_key(lambda_args);
+        void api_plus_rating(lambda_args);
+        void api_minus_rating(lambda_args);
+        void api_search(lambda_args);
+        void api_node_info(lambda_args);
+        void api_node_info_chart(lambda_args);
+        void not_found(lambda_args);
     };
 }
 
