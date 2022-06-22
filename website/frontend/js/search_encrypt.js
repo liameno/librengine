@@ -1,34 +1,33 @@
 let rsa = new JSEncrypt({default_key_size: 1024});
-let is_generating = true;
+let is_generating = false;
 
 let public_key = get_with_expiry("public_key");
 let private_key = get_with_expiry("private_key");
 
 function load() {
-  var title = document.getElementsByClassName("title")[0];
-  title.innerHTML = "GENERATING...";
+    is_generating = true;
 
-  if (public_key == null || private_key == null) {
+    const title = document.getElementsByClassName("title")[0];
+    title.innerHTML = "GENERATING...";
+
+    if (public_key == null || private_key == null) {
     rsa.getKey(function() {
         const expire_time = 3600 * 1000; //1 hour
 
-        set_with_expiry("public_key", rsa.getPublicKey(), expire_time); 
-        set_with_expiry("private_key", rsa.getPrivateKey(), expire_time); 
-  
+        set_with_expiry("public_key", rsa.getPublicKey(), expire_time);
+        set_with_expiry("private_key", rsa.getPrivateKey(), expire_time);
+
         title.innerHTML = "librengine";
         is_generating = false;
     });
-  } else {
-      title.innerHTML = "librengine";
-      is_generating = false;
-  }
+    } else {
+        title.innerHTML = "librengine";
+        is_generating = false;
+    }
 }
 
 function submit_form() {
-    if (is_generating) {
-      return false;
-    }
-
+    if (is_generating) return false;
     is_generating = true;
 
     let form = document.getElementById("search_widget");
