@@ -7,9 +7,10 @@ set(CMAKE_CXX_STANDARD 17)
 #curl - http lib / https://github.com/curl/curl
 #openssl - encryption lib / https://www.openssl.org/
 
-find_package(CURL)
-find_package(Threads)
-find_package(OpenSSL)
-
 add_executable(${PROJECT_NAME} main.cpp third_party/httplib.h src/pages.cpp include/pages.h)
-target_link_libraries(${PROJECT_NAME} PRIVATE /usr/lib/liblexbor.so curl OpenSSL::Crypto Threads::Threads /usr/local/lib/liblibrengine.so)
+
+if (NOT TARGET librengine)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib ${CMAKE_CURRENT_BINARY_DIR}/lib)
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE librengine)

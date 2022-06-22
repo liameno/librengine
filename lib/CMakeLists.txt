@@ -9,17 +9,23 @@ set(src src/encryption.cpp src/typesense.cpp src/http.cpp src/logger.cpp src/con
 set(include_all ${include})
 set(src_all ${src} src/str.cpp)
 
-#lexbor - html, css / https://github.com/lexbor/lexbor
-#curl - http lib    / https://github.com/curl/curl
+#lexbor - html parser   / https://github.com/lexbor/lexbor
+#curl - http lib        / https://github.com/curl/curl
+#OpenSSL - crypto lib   / https://github.com/openssl/openssl
 
 find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
-#[[target_link_libraries(${PROJECT_NAME} PUBLIC
-        /usr/lib/liblexbor.so
-        curl
-        Threads::Threads)]]
+find_package(OpenSSL REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED ${include_all} ${src_all})
+if (NOT TARGET librengine)
+    add_library(${PROJECT_NAME} SHARED ${include_all} ${src_all})
+    target_link_libraries(${PROJECT_NAME} PUBLIC
+            /usr/lib/liblexbor.so
+            curl
+            OpenSSL::Crypto
+            Threads::Threads)
+endif()
+
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 include(GNUInstallDirs)

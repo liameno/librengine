@@ -1,20 +1,21 @@
 #include <optional>
-#include <librengine/structs.h>
-#include <librengine/config.h>
-#include <librengine/logger.h>
-#include <librengine/json.hpp>
-#include <librengine/str.h>
-#include <librengine/str_impl.h>
-#include <librengine/http.h>
-#include <librengine/typesense.h>
-#include <librengine/encryption.h>
-#include <librengine/search.h>
 #include <iostream>
 #include <cstring>
 #include <thread>
 #include <fstream>
 #include <memory>
 #include <map>
+
+#include "../../lib/include/structs.h"
+#include "../../lib/include/config.h"
+#include "../../lib/include/logger.h"
+#include "../../lib/include/json.hpp"
+#include "../../lib/include/str.h"
+#include "../../lib/include/str_impl.h"
+#include "../../lib/include/http.h"
+#include "../../lib/include/typesense.h"
+#include "../../lib/include/encryption.h"
+#include "../../lib/include/search.h"
 
 #include "../third_party/httplib.h"
 

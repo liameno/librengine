@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         server->Get("/api/node/info", [&](lambda_args) { pages->api_node_info(req, res); });
         server->Get("/api/node/info/chart", [&](lambda_args) { pages->api_node_info_chart(req, res); });
         server->Get(".*", [&](lambda_args) { pages->not_found(req, res); });
-        server->listen("0.0.0.0", config.website_.port);
+        server->listen("0.0.0.0", (int)config.website_.port);
     });
 
     while(!server->is_running()) {

@@ -2,12 +2,12 @@
 #include <lexbor/html/html.h>
 #include <optional>
 #include <queue>
-
-#include <librengine/config.h>
-#include <librengine/typesense.h>
-#include <librengine/cache.h>
 #include <mutex>
 #include <thread>
+
+#include "../../lib/include/config.h"
+#include "../../lib/include/typesense.h"
+#include "../../lib/include/cache.h"
 
 #ifndef WORKER_H
 #define WORKER_H

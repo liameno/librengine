@@ -5,12 +5,9 @@
 #include <thread>
 #include <algorithm>
 
-#include <librengine/http.h>
-#include <librengine/str.h>
-#include <librengine/logger.h>
-#include <librengine/helper.h>
-#include <librengine/cache.h>
-#include <librengine/robots_txt.h>
+#include "../../lib/include/logger.h"
+#include "../../lib/include/helper.h"
+#include "../../lib/include/robots_txt.h"
 
 #include "../include/json_generator.h"
 #include "../include/html_helper.h"

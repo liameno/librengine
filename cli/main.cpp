@@ -1,6 +1,5 @@
-#include <librengine/config.h>
-#include <librengine/logger.h>
-#include <librengine/search.h>
+#include "../../lib/include/config.h"
+#include "../../lib/include/search.h"
 
 int main(int argc, char **argv) {
     using namespace librengine;

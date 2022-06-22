@@ -1,4 +1,4 @@
-#include <librengine/config.h>
+#include "../../lib/include/config.h"
 
 #include "include/worker.h"
 
