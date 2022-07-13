@@ -44,7 +44,7 @@ namespace website {
 
     void pages::set_variables(std::string &page_src) {
         const std::string noscript_src = R"(<noscript><span class="noscript">Encryption doesn't work</span></noscript>)";
-        const std::string header_src = R"(<li><a href="/home">Home</a></li><li><a href="/node/info">Node Info</a></li><li><a href="https://github.com/liameno/librengine">Github</a></li>)";
+        const std::string header_src = R"(<li><a href="/home">Home</a></li><li><a href="/node/info">Node Info</a></li>)";
 
         replace(page_src, "{RSA_PUBLIC_KEY}", search_->rsa_public_key_base64);
         replace(page_src, "{NOSCRIPT_CONTENT}", noscript_src);

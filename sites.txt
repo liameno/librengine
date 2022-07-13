@@ -1,3 +1,4 @@
+teddit.net
 reddit.com
 yandex.ru
 linkedin.com
@@ -25,7 +26,6 @@ mail.ru
 okezone.com
 google.co.in
 office.com
-xvideos.com
 msn.com
 paypal.com
 bilibili.com
@@ -89,7 +89,6 @@ daum.net
 medium.com
 nytimes.com
 cricbuzz.com
-.com
 google.co.uk
 stackexchange.com
 popads.net
@@ -147,7 +146,6 @@ aliyun.com
 steamcommunity.com
 espncricinfo.com
 speedtest.net
-youporn.com
 kompas.com
 liputan.com
 ltn.com.tw
@@ -261,7 +259,6 @@ livejournal.com
 hespress.com
 otvfoco.com.br
 primevideo.com
-pornq.com
 pinimg.com
 academia.edu
 americanexpress.com
@@ -303,7 +300,6 @@ mercadolibre.com.mx
 namu.wiki
 redtube.com
 dell.com
-sex.com
 patch.com
 gismeteo.ru
 kumparan.com
@@ -480,7 +476,6 @@ wiktionary.org
 memurlar.net
 nike.com
 autodesk.com
-pornhublive.com
 urdupoint.com
 gmarket.co.kr
 segmentfault.com
@@ -662,7 +657,6 @@ google.com.co
 t.me
 kijiji.ca
 drive.ru
-yespornplease.com
 asahi.com
 afreecatv.com
 klix.ba
@@ -755,7 +749,6 @@ corriere.it
 turkiye.gov.tr
 ebay.fr
 mercadolibre.com.ve
-gotporn.com
 akoam.net
 abola.pt
 doorblog.jp
@@ -765,7 +758,6 @@ rarbgprx.org
 southwest.com
 teamviewer.com
 chron.com
-eporner.com
 caixa.gov.br
 .com
 amazon.com.mx
@@ -927,7 +919,6 @@ jumia.com.ng
 livescore.com
 searchdimension.com
 myntra.com
-pornpics.com
 yaplakal.com
 dhl.de
 xda-developers.com

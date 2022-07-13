@@ -12,6 +12,20 @@
 #include "../include/json_generator.h"
 #include "../include/html_helper.h"
 
+#define TRACKER_PATTERNS (std::vector { \
+    "googletagmanager.com/", "yandex.ru/metrika/", \
+    "google-analytics.com/", "GoogleAnalyticsObject", \
+    "google-analytics.js",   "googletag", \
+    "googletagservices.com/", "name=\"google", \
+    "property=\"fb", "name=\"twitter" \
+    \
+    "g.doubleclick.net ", "adservice.google.com", \
+    "amazon-adsystem.com/aax2/apstag.js", "yandex.ru/ads/system/context.js", \
+    "\"adServer\":", "googletag.pubads", "adsbygoogle.js", \
+    "googlesyndication.com/" \
+}) //TODO: config
+#define ALLOWED_CODES (std::vector {200}) //TODO: config
+#define ALLOWED_FILE_TYPES (std::vector {"", "html", "html5", "php", "phtml"}) //TODO: config
 #define DEBUG true //TODO: FALSE
 
 #if DEBUG
@@ -198,8 +212,6 @@ void worker::stop_threads() {
 }
 
 void worker::main_thread() {
-    const static std::vector<std::string> allowed_file_types = {"", "html", "html5", "php", "phtml"};
-
     auto this_thread_id = std::this_thread::get_id();
     std::pair<std::shared_ptr<std::thread>, bool> *thread = nullptr;
 
@@ -275,7 +287,7 @@ void worker::main_thread() {
         auto splited = split(*site_url.path, ".");
         auto file_type = (splited.size() <= 1) ? "" : splited.back();
 
-        if (std::find(allowed_file_types.begin(), allowed_file_types.end(), file_type) == allowed_file_types.end()) {
+        if (std::find(ALLOWED_FILE_TYPES.begin(), ALLOWED_FILE_TYPES.end(), file_type) == ALLOWED_FILE_TYPES.end()) {
             if_debug_print(logger::type::error, "disallowed file type", site_url.text);
             cache_mutex.lock();
             cache_host->put(site_url.text, result::disallowed_file_type);
@@ -288,7 +300,7 @@ void worker::main_thread() {
         url_.owner_url = owner_url.text;
 
         cache_mutex.lock();
-        auto cache = cache_host->get(*site_url.host);
+        auto cache = cache_host->get(site_url.host.value());
         if (cache == nullptr) cache = cache_url->get(site_url.text);
         cache_mutex.unlock();
 
@@ -306,10 +318,10 @@ void worker::main_thread() {
             thread->second = false;
             continue;
         }
-        if (hints_count_added("host", *site_url.host) >= config.crawler_.max_pages_site) {
+        if (hints_count_added("host", site_url.host.value()) >= config.crawler_.max_pages_site) {
             if_debug_print(logger::type::error, "pages count >= limit", site_url.text);
             cache_mutex.lock();
-            cache_host->put(*site_url.host, result::pages_limit);
+            cache_host->put(site_url.host.value(), result::pages_limit);
             cache_mutex.unlock();
             thread->second = false;
             continue;
@@ -337,7 +349,7 @@ worker::result worker::work(url &url_) {
     owner_url.parse();
 
     if (config.crawler_.is_check_robots_txt) {
-        auto robots_txt_body = get_added_robots_txt(*site_url.host).value_or("");
+        auto robots_txt_body = get_added_robots_txt(site_url.host.value()).value_or("");
         bool is_checked = true;
 
         if (robots_txt_body.empty()) {
@@ -345,7 +357,7 @@ worker::result worker::work(url &url_) {
             auto robots_txt_body_length = robots_txt_body.length();
 
             if (robots_txt_body_length > 0 && robots_txt_body_length < config.crawler_.max_robots_txt_symbols) {
-                const auto json = robots_txt_json(robots_txt_body, *site_url.host);
+                const auto json = robots_txt_json(robots_txt_body, site_url.host.value());
                 if (!json) return result::null_or_limit;
                 config.db_.robots.add(*json);
             } else {
@@ -363,7 +375,7 @@ worker::result worker::work(url &url_) {
     auto response = request_result.response;
     auto response_length = response->length();
 
-    //if_debug_print(logger::type::info, "response length = " + to_string(response_length), site_url.text);
+    //if_debug_print(logger::type::info, "http://localhost:8080/response length = " + to_string(response_length), site_url.text);
     if_debug_print(logger::type::info,
                    "response code = "  + to_string(request_result.code) +
                    " | curl code = " + to_string(request_result.curl_code), site_url.text);
@@ -374,8 +386,8 @@ worker::result worker::work(url &url_) {
         site_url.parse();
     }
 
-    if (request_result.code != 200) {
-        if_debug_print(logger::type::error, "code != 200", site_url.text);
+    if (std::find(ALLOWED_CODES.begin(), ALLOWED_CODES.end(), request_result.code) == ALLOWED_CODES.end()) {
+        if_debug_print(logger::type::error, "code not allowed", site_url.text);
         return result::null_or_limit;
     }
     if (!response || response_length < 1 || response_length >= config.crawler_.max_page_symbols) {
@@ -383,20 +395,29 @@ worker::result worker::work(url &url_) {
         return result::null_or_limit;
     }
 
-    auto document = parse_html(*response);
-    if (!document) return result::null_or_limit;
-    auto body = lxb_dom_interface_node((*document)->body);
-    if (body == nullptr) return result::null_or_limit;
+    auto document = parse_html(response.value());
 
-    std::string title = lxb_string_to_std(lxb_html_document_title((*document), nullptr)).value_or("");
+    if (!document) {
+        if_debug_print(logger::type::error, "parse_html null", site_url.text);
+        return result::null_or_limit;
+    }
+
+    auto body = lxb_dom_interface_node(document.value()->body);
+
+    if (body == nullptr) {
+        if_debug_print(logger::type::error, "site has not body", site_url.text);
+        return result::null_or_limit;
+    }
+
+    std::string title = lxb_string_to_std(lxb_html_document_title(document.value(), nullptr)).value_or("");
     //const std::string content = lxb_string_to_std(lxb_dom_node_text_content(body, nullptr)).value_or("");
-    std::string desc = get_desc("name", "description", *document); //meta tag
+    std::string desc = get_desc("name", "description", document.value()); //meta tag
 
     if (desc.empty()) {
-        desc = get_desc("http-equiv", "description", *document); //meta tag
+        desc = get_desc("http-equiv", "description", document.value()); //meta tag
     }
     if (desc.empty()) {
-        desc.append(compute_desc("h1", *document)); //h1 tags
+        desc.append(compute_desc("h1", document.value())); //h1 tags
     }
     if (title.empty() && desc.empty()) {
         if_debug_print(logger::type::error, "title & desc are empty", site_url.text);
@@ -405,35 +426,26 @@ worker::result worker::work(url &url_) {
 
     bool has_trackers = false;
 
-    auto detect_trackers_strings = {
-            //analytics
-            "googletagmanager.com/", "yandex.ru/metrika/",
-            "google-analytics.com/", "GoogleAnalyticsObject",
-            "google-analytics.js",   "googletag",
-            "googletagservices.com/",
-            //ads
-            "g.doubleclick.net ", "adservice.google.com",
-            "amazon-adsystem.com/aax2/apstag.js", "yandex.ru/ads/system/context.js",
-            R"("adServer":")", "googletag.pubads", "adsbygoogle.js",
-            "googlesyndication.com/"
-    };
-
-    for (const auto &s : detect_trackers_strings) {
-        if (contains(*response, s)) {
+    for (const auto &s : TRACKER_PATTERNS) {
+        if (contains(response.value(), s)) {
             has_trackers = true;
             break;
         }
     }
 
-    const auto json = website_json(title, site_url.text, *site_url.host, desc, has_trackers);
-    if (!json) return result::null_or_limit;
+    const auto json = website_json(title, site_url.text, site_url.host.value(), desc, has_trackers);
 
-    config.db_.websites.add(*json);
+    if (!json) {
+        if_debug_print(logger::type::error, "generate json (add website)", site_url.text);
+        return result::null_or_limit;
+    }
+
+    config.db_.websites.add(json.value());
 
     //print added url
     std::cout << logger::yellow << "[" << site_url.text << "]" << std::endl;
 
-    auto collection = lxb_dom_collection_make(&(*document)->dom_document, 16);
+    auto collection = lxb_dom_collection_make(&(document.value())->dom_document, 16);
     lxb_dom_elements_by_tag_name(lxb_dom_interface_element(body), collection, std_string_to_lxb("a"), 1);
     const auto a_length = collection->array.length;
 
@@ -441,20 +453,20 @@ worker::result worker::work(url &url_) {
         auto element = lxb_dom_collection_element(collection, i);
         const auto href_value = lxb_string_to_std(lxb_dom_element_get_attribute(element, std_string_to_lxb("href"), 4, nullptr));
 
-        if (!href_value || *href_value == site_url.text || starts_with(*href_value, "#")) {
+        if (!href_value || href_value.value() == site_url.text || starts_with(href_value.value(), "#")) {
             continue;
         }
 
-        http::url href_url(*href_value);
+        http::url href_url(href_value.value());
         href_url.parse();
 
         url new_url;
 
-        if (!starts_with(*href_value, "http")) {
+        if (!starts_with(href_value.value(), "http")) {
             new_url.site_url = href_url.text;
             new_url.owner_url = site_url.text;
         } else {
-            new_url.site_url = *href_value;
+            new_url.site_url = href_value.value();
         }
 
         queue_mutex.lock();
@@ -464,6 +476,6 @@ worker::result worker::work(url &url_) {
 
     if (a_length > 0) lxb_dom_collection_destroy(collection, true);
 
-    lxb_html_document_destroy(*document);
+    lxb_html_document_destroy(document.value());
     return result::added;
 }

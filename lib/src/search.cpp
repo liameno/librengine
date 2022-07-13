@@ -25,7 +25,7 @@ namespace librengine {
     }
 
     std::vector<search_result> search::local(const std::string &q, const size_t &p) {
-        const auto response = config.db_.websites.search(q, "url,title,desc", {{"page", std::to_string(p)}});
+        const auto response = config.db_.websites.search(q, "host,url,title,desc", {{"page", std::to_string(p)}});
         nlohmann::json result_json = nlohmann::json::parse(response);
 
         const auto body = result_json["hits"];
