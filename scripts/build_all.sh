@@ -1,8 +1,26 @@
-cd lib
-mkdir build && cd build && cmake .. && sudo make install
+#cd lib
+#mkdir build && cd build && cmake .. && sudo make install
 
-cd ../../crawler
-mkdir build && cd build && cmake .. && make
+function build() {
+  cd "$1" || exit
+  mkdir build
+  cd build
+  cmake ..
+  make
+  pwd
+}
 
-cd ../../website
-mkdir build && cd build && cmake .. && make
+current_directory=$(pwd)
+
+case "$current_directory" in
+  *scripts*)
+    echo ""
+    ;;
+  *)
+    echo "You must run it from scripts directory"
+    exit 1
+esac
+
+build "../crawler"
+build "../../website"
+build "../../cli"
