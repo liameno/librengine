@@ -38,11 +38,7 @@
 
 #### Arch
 ```shell
-sh scripts/install_dependencies_arch.sh
-```
-#### Debian
-```shell
-sh scripts/install_dependencies_debian.sh
+sh scripts/install_deps.sh
 ```
 ## Build
 ```shell
@@ -65,6 +61,7 @@ sh scripts/init_db.sh
 #[config path]
 ```
 #### CLI
+###### Run website before
 ```shell
 ./cli gnu 1 ../../config.json
 #[query] [page] [config path]
