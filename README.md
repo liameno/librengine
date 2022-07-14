@@ -36,13 +36,12 @@
 - typesense ([source](https://github.com/typesense/typesense))
 - openssl   ([source](https://github.com/openssl/openssl))
 
-#### Arch
 ```shell
-sh scripts/install_deps.sh
+cd scripts && sh install_deps.sh
 ```
 ## Build
 ```shell
-sh scripts/build_all.sh
+cd scripts && sh build_all.sh
 ```
 ## Run
 ```shell
