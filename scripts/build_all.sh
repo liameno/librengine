@@ -1,7 +1,7 @@
 #cd lib
 #mkdir build && cd build && cmake .. && sudo make install
 
-function build() {
+build() {
   cd "$1" || exit
   mkdir build
   cd build
