@@ -58,8 +58,8 @@ sh scripts/init_db.sh
 #[query] [page] [config path]
 ```
 
-##Instances
-¯\_(ツ)_/¯
+## Instances
+¯\\_(ツ)_/¯
 
 ## TODO
 - [x] Encryption (assymetric)
