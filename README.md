@@ -25,8 +25,8 @@
 ## Usage (Docker)
 
 Please run the build every time to change the arguments. <br>
-The site is launched by default on port 8080 AND with tor proxy (<b>!!!</b>), to edit it you need to change config.json and rebuild website.
-The api key for the database must be changed in the config and when the database is started(--api-key)
+The site is launched by default on port 8080 AND with tor proxy (<b>!!!</b>), to edit it you need to change config.json and rebuild website. <br>
+The api key for the database must be changed in the config and when the database is started(--api-key).
 
 #### DB - please run before using other
 ```shell
@@ -44,7 +44,7 @@ sudo docker-compose up crawler
 #### Website
 ```shell
 sudo docker-compose build website --build-arg CONFIG="$(cat config.json)"
-sudo docker-compose up crawler
+sudo docker-compose up website
 ```
 
 ## Instances
@@ -69,8 +69,8 @@ sudo docker-compose up crawler
 ./config.json
 
 ## Mirrors
-https://github.com/liameno/librengine
-https://codeberg.org/liameno/librengine
+- https://github.com/liameno/librengine
+- https://codeberg.org/liameno/librengine
 
 ## License
 GNU Affero General Public License v3.0
