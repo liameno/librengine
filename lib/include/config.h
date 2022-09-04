@@ -28,6 +28,7 @@ namespace librengine::config {
         std::vector<node_s> nodes;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
     struct crawler {
         std::string user_agent;
@@ -48,17 +49,20 @@ namespace librengine::config {
         bool is_check_robots_txt;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
     struct cli {
         std::optional<http::proxy> proxy;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
     struct website {
         size_t port;
         std::optional<http::proxy> proxy;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
     struct db {
         std::string url;
@@ -67,6 +71,7 @@ namespace librengine::config {
         typesense robots;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
 
     struct all {
@@ -77,6 +82,7 @@ namespace librengine::config {
         db db_;
 
         void load_from_file(const std::string &path);
+        void load_from_content(const std::string &content);
     };
 }
 

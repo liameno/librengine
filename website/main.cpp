@@ -5,12 +5,12 @@ int main(int argc, char **argv) {
     using namespace httplib;
 
     if (argc <= 1) {
-        std::cout << "Usage: bin [config_path]\nExample: ./backend config.json" << std::endl;
+        std::cout << "Usage: bin [config]\nExample: ./website \"$(cat config.json)\"" << std::endl;
         return 1;
     }
 
     config::all config;
-    config.load_from_file(argv[1]);
+    config.load_from_content(argv[1]);
 
     auto server = std::make_shared<Server>();
     auto pages = std::make_shared<website::pages>(config);

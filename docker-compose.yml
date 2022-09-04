@@ -1,0 +1,12 @@
+version: '3'
+services:
+  website:
+    build:
+      context: ./
+      dockerfile: ./website/Dockerfile
+    network_mode: "host"
+  crawler:
+    build:
+      context: ./
+      dockerfile: ./crawler/Dockerfile
+    network_mode: "host"

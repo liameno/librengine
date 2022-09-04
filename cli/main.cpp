@@ -5,12 +5,12 @@ int main(int argc, char **argv) {
     using namespace librengine;
 
     if (argc <= 2) {
-        std::cout << "Usage: bin [query] [page] [config_path]\nExample: ./cli \"gnu\" 1 ../../config.json" << std::endl;
+        std::cout << "Usage: bin [query] [page] [config]\nExample: ./cli \"gnu\" 1 \"$(cat config.json)\"" << std::endl;
         return 1;
     }
 
     config::all config;
-    config.load_from_file(argv[3]);
+    config.load_from_content(argv[3]);
 
     std::string query = argv[1];
     size_t page = std::stoi(argv[2]);

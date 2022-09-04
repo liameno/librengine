@@ -367,7 +367,6 @@ leboncoin.fr
 sourceforge.net
 namasha.com
 grammarly.com
-.com.tw
 friv.com
 livedoor.com
 cambridge.org
@@ -420,7 +419,6 @@ weblio.jp
 lenta.ru
 ptt.cc
 google.gr
-.com
 albawabhnews.com
 verystream.com
 repubblica.it
@@ -593,7 +591,6 @@ cloudflare.com
 indiamart.com
 beeg.com
 drom.ru
-.com
 mileroticos.com
 costco.com
 archiveofourown.org
@@ -725,7 +722,6 @@ kizlarsoruyor.com
 concursolutions.com
 fast.com
 nature.com
-.com
 binance.com
 rutor.info
 itmedia.co.jp
@@ -759,7 +755,6 @@ southwest.com
 teamviewer.com
 chron.com
 caixa.gov.br
-.com
 amazon.com.mx
 creditonebank.com
 sci-hub.tw

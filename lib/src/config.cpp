@@ -15,13 +15,16 @@ namespace librengine::config {
 
     void global::load_from_file(const std::string &path) {
         const std::string content = helper::get_file_content(path);
+        load_from_content(content);
+    }
+    void global::load_from_content(const std::string &content) {
         nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
         json = json["global"];
 
         auto nodes = json["nodes"];
 
         for (auto node : nodes) {
-            this->nodes.push_back(node_s{node["name"], node["url"]});
+            this->nodes.push_back(node_s { node["name"], node["url"] });
         }
 
         rsa_key_length = json["rsa_key_length"].get<size_t>();
@@ -31,6 +34,9 @@ namespace librengine::config {
 
     void crawler::load_from_file(const std::string &path) {
         const std::string content = helper::get_file_content(path);
+        load_from_content(content);
+    }
+    void crawler::load_from_content(const std::string &content) {
         nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
         json = json["crawler"];
 
@@ -38,7 +44,7 @@ namespace librengine::config {
 
         std::string proxy_string = json["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
+        if (!proxy_string.empty()) proxy = http::proxy { proxy_string };
 
         load_page_timeout_s = json["load_page_timeout_s"].get<size_t>();
         update_time_site_info_s_after = json["update_time_site_info_s_after"].get<size_t>();
@@ -54,16 +60,22 @@ namespace librengine::config {
 
     void cli::load_from_file(const std::string &path) {
         const std::string content = helper::get_file_content(path);
+        load_from_content(content);
+    }
+    void cli::load_from_content(const std::string &content) {
         nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
         json = json["cli"];
 
         std::string proxy_string = json["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
+        if (!proxy_string.empty()) proxy = http::proxy { proxy_string };
     }
 
     void website::load_from_file(const std::string &path) {
         const std::string content = helper::get_file_content(path);
+        load_from_content(content);
+    }
+    void website::load_from_content(const std::string &content) {
         nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
         json = json["website"];
 
@@ -71,11 +83,14 @@ namespace librengine::config {
 
         std::string proxy_string = json["proxy"].get<std::string>();
 
-        if (!proxy_string.empty()) proxy = http::proxy{proxy_string};
+        if (!proxy_string.empty()) proxy = http::proxy { proxy_string };
     }
 
     void db::load_from_file(const std::string &path) {
         const std::string content = helper::get_file_content(path);
+        load_from_content(content);
+    }
+    void db::load_from_content(const std::string &content) {
         nlohmann::json json = nlohmann::json::parse(content, nullptr, true, true);
         json = json["db"];
 
@@ -92,5 +107,13 @@ namespace librengine::config {
         cli_.load_from_file(path);
         website_.load_from_file(path);
         db_.load_from_file(path);
+    }
+
+    void all::load_from_content(const std::string &content) {
+        global_.load_from_content(content);
+        crawler_.load_from_content(content);
+        cli_.load_from_content(content);
+        website_.load_from_content(content);
+        db_.load_from_content(content);
     }
 }
