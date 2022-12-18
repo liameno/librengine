@@ -47,6 +47,42 @@ sudo docker-compose build website --build-arg CONFIG="$(cat config.json)"
 sudo docker-compose up website
 ```
 
+## Usage (Manual)
+
+## Deps
+```shell
+cd scripts && sh install_deps.sh
+```
+
+## Build
+```shell
+cd scripts && sh build_all.sh
+```
+
+## Run
+
+The site is launched by default on port 8080 AND with tor proxy (<b>!!!</b>), to edit it you need to change config.json. <br>
+The api key for the database must be changed in the config and when the database is started(--api-key).
+
+#### DB - please run before using other
+```shell
+mkdir /tmp/typesense-data &&
+./typesense-server --data-dir=/tmp/typesense-data --api-key=xyz --enable-cors &&
+sh scripts/init_db.sh
+```
+
+#### Crawler
+```shell
+./crawler ../../sites.txt 5 ../../config.json
+#[sites_path] [threads_count] [config path]
+```
+
+#### Website
+```shell
+./website ../../config.json
+#[config path]
+```
+
 ## Instances
 ¯\\_(ツ)_/¯
 
