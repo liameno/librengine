@@ -1,3 +1,12 @@
+### New version: https://github.com/sightnet
+This project will not be maintained.
+
+### ==========
+### ==========
+
+<br>
+<br>
+
 ![](images/logo.png)
 #### Privacy Web Search Engine
 ## Website
